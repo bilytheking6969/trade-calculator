@@ -1316,7 +1316,9 @@ function shortName(name, maxWords = 4) {
 
 // ── Lazy Data Loading ──────────────────────────────────────────
 const ALL_DATA = {};
-const AVAILABLE_YEARS = ['2024', '2025', '2026'];
+const START_YEAR = 2024;
+const CURRENT_YEAR = new Date().getFullYear();
+const AVAILABLE_YEARS = Array.from({length: CURRENT_YEAR - START_YEAR + 2}, (_, i) => String(START_YEAR + i));
 const loadedYears = new Set();
 
 function loadYearData(y) {
@@ -1335,13 +1337,20 @@ function loadYearData(y) {
   });
 }
 
+function isYearPartial(y) {
+  const data = ALL_DATA[y];
+  if (!data) return false;
+  const months = Object.keys(data.commodity?.['1'] || data.commodity?.['2'] || {}).filter(m => m !== '00');
+  return months.length < 12;
+}
+
 function initYearSelector() {
   const yearSel = document.getElementById('year-select');
   yearSel.innerHTML = '';
   for (const y of AVAILABLE_YEARS) {
     const opt = document.createElement('option');
     opt.value = y;
-    opt.textContent = y + (y === '2026' ? ' (חלקי*)' : '');
+    opt.textContent = y + (isYearPartial(y) ? ' (חלקי*)' : '');
     opt.disabled = !ALL_DATA[y];
     if (!ALL_DATA[y]) opt.style.color = '#aaa';
     yearSel.appendChild(opt);
@@ -1396,7 +1405,7 @@ function _applyYear(y) {
   const allYearOpt = document.querySelector('#month-select option[value="00"]');
   if (allYearOpt) allYearOpt.textContent = `כל שנת ${y}`;
   const note = document.getElementById('partial-year-note');
-  if (note) note.style.display = (y === '2026' && ALL_DATA[y]) ? '' : 'none';
+  if (note) { note.style.display = (ALL_DATA[y] && isYearPartial(y)) ? '' : 'none'; note.textContent = `* נתוני ${y} חלקיים — מכסים את החודשים שעובדו בלבד`; }
   if (tab === 'country' && selectedChapter) updateChapter4Options();
   render();
 }
@@ -2138,9 +2147,9 @@ function renderComparisonChart(which) {
     fill: false,
   }];
 
-  const hasPartial = availYears.includes('2026');
+  const partialYears = availYears.filter(y => isYearPartial(y));
   const noteEl = document.getElementById('compare-' + which + '-note');
-  noteEl.textContent = hasPartial ? '* נתוני 2026 חלקיים' : '';
+  noteEl.textContent = partialYears.length ? `* נתוני ${partialYears.join(', ')} חלקיים` : '';
 
   const canvasId = which === 'main' ? 'compareMainChart' : which === 'sub' ? 'compareSubChart' : 'compareSub2Chart';
   const ctx = document.getElementById(canvasId).getContext('2d');
