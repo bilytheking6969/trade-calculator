@@ -1,0 +1,83 @@
+name: Update Trade Data
+
+on:
+  schedule:
+    - cron: '0 6 * * 6'  # Every Saturday at 06:00 UTC
+  workflow_dispatch:       # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download new ZIP files
+        run: |
+          YEAR=$(date +%Y)
+          MONTH=$(date +%-m)
+          RAW_DIR="import_export_calculator/data/raw"
+          mkdir -p "$RAW_DIR"
+          NEW_FILES=0
+
+          # Try current month and the two previous months (CBS sometimes publishes with delay)
+          for OFFSET in 0 1 2; do
+            M=$((MONTH - OFFSET))
+            Y=$YEAR
+            if [ $M -le 0 ]; then
+              M=$((M + 12))
+              Y=$((Y - 1))
+            fi
+
+            for TYPE in imp exp; do
+              FILE="${TYPE}_${M}_${Y}.zip"
+              DEST="$RAW_DIR/$FILE"
+              if [ ! -f "$DEST" ]; then
+                echo "Trying to download $FILE..."
+                curl -s -o "$DEST" \
+                  "https://www.cbs.gov.il/he/publications/DocLib/impexpfiles/$FILE"
+                SIZE=$(stat -c%s "$DEST" 2>/dev/null || echo 0)
+                if [ "$SIZE" -lt 10000 ]; then
+                  echo "  -> Not available yet (size: $SIZE bytes), removing."
+                  rm -f "$DEST"
+                else
+                  echo "  -> Downloaded OK ($SIZE bytes)"
+                  NEW_FILES=$((NEW_FILES + 1))
+                fi
+              else
+                echo "Already have $FILE, skipping."
+              fi
+            done
+          done
+
+          echo "NEW_FILES=$NEW_FILES" >> $GITHUB_ENV
+          echo "YEAR=$YEAR" >> $GITHUB_ENV
+
+      - name: Process data
+        if: env.NEW_FILES != '0'
+        run: |
+          cd import_export_calculator
+          python process_data.py --year ${{ env.YEAR }}
+
+      - name: Commit and push if changed
+        if: env.NEW_FILES != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add import_export_calculator/data/trade_data_*.js \
+                  import_export_calculator/data/raw/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "auto: update trade data $(date +%Y-%m)"
+            git push
+          fi
