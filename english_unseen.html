@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>תרגול אנגלית – Unseen</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -267,6 +270,21 @@
     .check-btn:hover { background: #5a3680; }
     .check-btn:disabled { background: #bbb; cursor: default; }
 
+    .translate-btn {
+      margin-top: 6px;
+      margin-right: 8px;
+      padding: 7px 14px;
+      background: #f0a500;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .translate-btn:hover { background: #c98200; }
+    .translate-btn:disabled { background: #bbb; cursor: default; }
+
     .feedback {
       direction: rtl;
       text-align: right;
@@ -401,6 +419,7 @@
   <!-- Input Card -->
   <div class="card" id="inputCard">
     <h1>📖 תרגול אנגלית</h1>
+    <div style="font-size:0.7rem;color:#aaa;text-align:center;margin-top:2px;">v2.3</div>
     <p class="subtitle">בחר ילד, הזן נושא וקלוד יכין טקסט ושאלות הבנה</p>
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
@@ -588,7 +607,7 @@ function toggleTTS() {
   if (!text) return;
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = 'en-US';
-  utt.rate = 0.88;
+  utt.rate = selectedProfile === 'itai' ? 0.65 : 0.88;
   // Pick best English voice if available
   const voices = speechSynthesis.getVoices();
   const eng = voices.find(v => v.lang.startsWith('en') && v.localService) || voices.find(v => v.lang.startsWith('en'));
@@ -773,21 +792,22 @@ const topicData = {
   },
   itai: {
     subjects: [
-      'גורי אריות','גורי דובים','כלבלבים','גורי חתולים','ארנבים','דגי זהב',
+      'גורי אריות','גורי דובים','גורי פנדה','גורי פילים','ארנבים','דגי זהב',
       'פרפרים','חיפושיות','תולעי אור','ציפורים','ברווזים','פינגווינים קטנים',
       'צפרדעים','חלזונות','ינשופים','אווזים','תוכים צבעוניים','חמסטרים',
+      'צב קטן','קנגורו','קואלה','פלמינגו','גמל','חמור','סוס',
       'גלידה','עוגת שוקולד','פיצה','עוגיות','גבינה','תפוחי אדמה',
       'בלונים','צעצועים','לגו','קוביות בנייה','בובות דובים','כדורים',
       'החוף','הים','גלים קטנים','חול','טירות חול','צדפות',
       'קשת בענן','גשם','שלג','שמש','עננים','כוכבים בלילה',
       'גן ילדים','מגלשה','נדנדה','חבל קפיצה','חופש גדול',
       'יום הולדת','מתנות','עוגת יום הולדת','נרות','בלונים צבעוניים',
-      'ילד אמיץ','ילד שעזר לחבר','ילד שמצא כלב','ילדה שטיפלה בציפור',
+      'ילד אמיץ','ילד שעזר לחבר','ילדה שטיפלה בציפור','ילד שמצא צב',
       'גן חיות','פיל קטן','ג׳ירפה צעירה','קוף משחק','נמר ישן',
       'ספינה','רכבת','מטוס קטן','אוטובוס','אופניים',
       'יער קסום','מערה מסתורית','עץ גדול','פרח מדבר','נהר',
       'לחם חם','ריח של עוגיות','מטבח','בישול עם סבתא',
-      'חתול שישן','כלב שרץ','ציפור שר','דג קופץ',
+      'ברווז שר','צפרדע קופצת','ציפור שרה','דג קופץ','פינגווין רוקד',
     ],
     angles: [
       'שלומד משהו חדש','שמצא חבר חדש','שעזר למישהו',
@@ -830,31 +850,32 @@ function selectTextType(type) {
 
 // ---- Profiles ----
 const profiles = {
-  alon:  { name: 'אלון',  baseGrade: 7 },
-  eitan: { name: 'איתן', baseGrade: 5 },
+  alon:  { name: 'אלון',  baseGrade: 13 },
+  eitan: { name: 'איתן', baseGrade: 12 },
   itai:  { name: 'איתי',  baseGrade: 1 },
 };
 
 // ---- Grade levels ----
 const gradeLevels = [
-  { label: 'Nursery A',  words: 8,   level: 'ultra beginner: use ONLY these 15 words: cat, dog, big, run, eat, play, red, I, go, yes, fun, one, two, see, jump. Maximum 2-3 words per sentence. Extremely simple, like a toddler book.' },
-  { label: 'Nursery B',  words: 12,  level: 'ultra beginner: use only the 20 most basic English words (cat, dog, big, small, run, eat, play, red, blue, I, go, happy, yes, no, see, one, two, jump, fun, good). 2-4 words per sentence only.' },
-  { label: 'Pre-K A',    words: 15,  level: 'absolute beginner: use ONLY the 30 most common English words (the, a, cat, dog, run, big, eat, play, go, happy, red, blue, yes, no, see, I, is, it, can, has). Maximum 3-4 words per sentence. Like a baby book.' },
-  { label: 'Pre-K B',    words: 25,  level: 'absolute beginner: use only the 60 most basic English words. Every sentence must be 3-5 words only. No grammar beyond simple present.' },
-  { label: '1st grade',  words: 40,  level: 'extremely simple: only basic words like "go, eat, big, small, happy". Maximum 1 clause per sentence. Like a picture book.' },
+  { label: 'Baby',       words: 8,   level: 'Write EXACTLY 1 very short sentence using only the simplest words. Max 8 words. Example: "A big frog sits on a rock." or "Three ducks swim in the pond."' },
+  { label: 'Nursery A',  words: 15,  level: 'Write EXACTLY 1 sentence using simple words. Max 12 words. Example: "A small penguin finds a big fish near the cold water."' },
+  { label: 'Nursery B',  words: 25,  level: 'Write EXACTLY 2 very short sentences. Each sentence max 10 words. Simple vocabulary: animals, colors, numbers, actions.' },
+  { label: 'Pre-K A',    words: 40,  level: 'Write EXACTLY 3 short sentences in natural English. Varied vocabulary. Simple present or past tense.' },
+  { label: 'Pre-K B',    words: 55,  level: 'Write EXACTLY 3 sentences. Natural English, varied vocabulary. Simple grammar.' },
+  { label: '1st grade',  words: 70,  level: 'Write EXACTLY 4 sentences. Natural English. Simple grammar and vocabulary.' },
   { label: '2nd grade',  words: 55,  level: 'very simple: only the 300 most common English words. Very short sentences. No complex grammar.' },
   { label: '3rd grade',  words: 70,  level: 'simple: common everyday words only. Short sentences. Present and past tense only.' },
   { label: '4th grade',  words: 90,  level: 'simple: basic vocabulary. Simple sentences. Avoid idioms or complex structures.' },
   { label: '5th grade',  words: 110, level: 'elementary: familiar vocabulary. Simple and compound sentences only.' },
   { label: '6th grade',  words: 130, level: 'elementary-intermediate: common vocabulary. Some compound sentences.' },
-  { label: '7th grade',  words: 150, level: 'intermediate: general vocabulary. Varied sentence structures.' },
-  { label: '8th grade',  words: 170, level: 'intermediate: broader vocabulary. Mix of sentence types.' },
-  { label: '9th grade',  words: 190, level: 'upper-intermediate: rich vocabulary. Complex sentences.' },
-  { label: '10th grade', words: 210, level: 'upper-intermediate: academic vocabulary.' },
-  { label: '11th grade', words: 230, level: 'advanced: sophisticated vocabulary and structures.' },
-  { label: '12th grade', words: 250, level: 'advanced: native-level vocabulary and complex ideas.' },
+  { label: '7th grade',  words: 200, level: 'intermediate: general vocabulary. Varied sentence structures.' },
+  { label: '8th grade',  words: 240, level: 'intermediate: broader vocabulary. Mix of sentence types.' },
+  { label: '9th grade',  words: 280, level: 'upper-intermediate: rich vocabulary. Complex sentences.' },
+  { label: '10th grade', words: 320, level: 'upper-intermediate: academic vocabulary.' },
+  { label: '11th grade', words: 360, level: 'advanced: sophisticated vocabulary and structures.' },
+  { label: '12th grade', words: 400, level: 'advanced: native-level vocabulary and complex ideas.' },
 ];
-const NUM_QUESTIONS = 5;
+const NUM_QUESTIONS = 5; // default; overridden per-profile in buildPrompt
 
 const diffLabels = ['קלה מאוד', 'קלה', 'רגילה', 'מאתגרת', 'קשה'];
 const DIFF_STEPS = 5; // -2 .. +2
@@ -945,6 +966,8 @@ function buildPrompt(topic, g, type) {
   const typeDesc = type === 'science'
     ? 'a non-fiction scientific/informational text with facts and explanations'
     : 'a narrative fictional story with characters and events';
+  const noCatsDogsNote = '';
+  const numQ = selectedProfile === 'itai' ? 3 : 5;
   return `You are an English teacher creating a reading comprehension exercise for Israeli students who are learning English as a foreign language.
 
 Student level: ${g.label} — English proficiency: ${g.level}
@@ -952,8 +975,8 @@ Topic: "${topic}"
 Text type: ${typeDesc}
 
 Instructions:
-1. Write an English reading passage of approximately ${g.words} words about the topic. The text must be ${typeDesc}. STRICTLY follow the vocabulary and complexity level: ${g.level}. Do NOT use words above this level. Make it engaging and age-appropriate.
-2. Write exactly 5 multiple-choice comprehension questions at the SAME language level as the passage. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
+1. Write an English reading passage about the topic. STRICTLY follow these instructions: ${g.level}. Make it engaging and age-appropriate.
+2. Write exactly ${numQ} multiple-choice comprehension questions at the SAME language level as the passage. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
 
 Output ONLY valid JSON in this exact format (no markdown, no extra text):
 {
@@ -1010,6 +1033,8 @@ function renderOutput(data) {
         }).join('')}
       </div>
       <button class="check-btn" onclick="checkAnswer(${i})">בדוק ✓</button>
+      <button class="translate-btn" id="trBtn_${i}" onclick="translateQuestion(${i}, this)">🇮🇱 תרגום לעברית</button>
+      <div class="translate-result" id="tr_${i}" style="display:none;margin-top:6px;padding:7px 10px;background:#fffbe6;border-radius:7px;font-size:0.92rem;color:#555;direction:rtl;"></div>
       <div class="feedback" id="fb_${i}"></div>
     `;
     container.appendChild(block);
@@ -1017,6 +1042,43 @@ function renderOutput(data) {
 
   document.getElementById('outputCard').className = 'card output active';
   document.getElementById('outputCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function translateQuestion(i, btn) {
+  const block = document.querySelectorAll('.question-block')[i];
+  const qText = block.querySelector('.question-text').textContent;
+  const opts  = [...block.querySelectorAll('.option')].map(l => l.textContent.trim()).join('\n');
+  const trDiv = document.getElementById('tr_' + i);
+
+  if (trDiv.style.display !== 'none') { trDiv.style.display = 'none'; btn.textContent = '🇮🇱 תרגום'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const res = await fetch('https://englishpractice-daclgs3x2-bilytheking6969s-projects.vercel.app/api/proxy', {
+      method: 'POST',
+      headers: {
+        'x-api-key': getApiKey(),
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: `Translate this question and its options to Hebrew. Return ONLY the translation, no extra text.\n\nQuestion: ${qText}\n${opts}` }]
+      }),
+    });
+    const data = await res.json();
+    trDiv.textContent = data.content[0].text.trim();
+    trDiv.style.display = 'block';
+    btn.textContent = '🙈 הסתר';
+  } catch(e) {
+    trDiv.textContent = 'שגיאה בתרגום';
+    trDiv.style.display = 'block';
+    btn.textContent = '🇮🇱 תרגום';
+  }
+  btn.disabled = false;
 }
 
 let answered = {};
