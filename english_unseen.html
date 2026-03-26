@@ -406,7 +406,7 @@
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
       <div class="profiles-label" style="margin-bottom:0">מי מתרגל היום?</div>
       <div style="display:flex;gap:6px;">
-        <button onclick="showSyncPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🔄 סנכרון</button>
+        <button onclick="showSyncPopup()" style="background:none;border:1.5px solid #f5a0a0;color:#c0392b;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🗑️ איפוס</button>
         <button onclick="showPointsPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🏅 טבלת ניקוד</button>
       </div>
     </div>
@@ -451,54 +451,23 @@
 
     <!-- Sync popup -->
     <div id="syncPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:12px;">
-      <div style="background:white; border-radius:20px; padding:24px; max-width:380px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
-        <h3 style="color:#4c2f8a; margin-bottom:4px; text-align:center;">🔄 סנכרון אוטומטי</h3>
-        <p style="font-size:0.82rem; color:#888; text-align:center; margin-bottom:18px;">נקודות יישמרו בענן ויופיעו בכל מכשיר</p>
+      <div style="background:white; border-radius:20px; padding:24px; max-width:360px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <h3 style="color:#4c2f8a; margin-bottom:16px; text-align:center;">🗑️ איפוס נקודות</h3>
 
-        <!-- Token setup -->
-        <div style="background:#f8f5ff; border-radius:12px; padding:14px; margin-bottom:16px;">
-          <div style="font-size:0.88rem; font-weight:700; color:#4c2f8a; margin-bottom:8px;">⚡ הגדרה חד-פעמית (לאבא/אמא)</div>
-          <label style="font-size:0.82rem; color:#555; margin-bottom:6px;">GitHub Token:</label>
-          <div style="display:flex; gap:6px; margin-bottom:8px;">
-            <input type="password" id="ghTokenInput" placeholder="ghp_..." style="flex:1; font-family:monospace; font-size:0.8rem; margin-bottom:0;" />
-            <button onclick="saveGHToken()" style="padding:10px 14px; background:#4c2f8a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">שמור</button>
+        <div id="resetSection">
+          <button onclick="showResetPin()" style="width:100%; padding:12px; background:#fff0f0; color:#c0392b; border:1.5px solid #f5a0a0; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.95rem;">🗑️ אפס את כל הנקודות</button>
+        </div>
+        <div id="resetPinSection" style="display:none;">
+          <div style="font-size:0.88rem; color:#c0392b; font-weight:600; margin-bottom:10px; text-align:center;">הזן קוד לאישור:</div>
+          <div style="display:flex; gap:6px;">
+            <input type="password" id="resetPinInput" placeholder="קוד..." style="flex:1; font-family:monospace; font-size:1.1rem; text-align:center; margin-bottom:0;" maxlength="10" />
+            <button onclick="confirmReset()" style="padding:10px 16px; background:#c0392b; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">אשר</button>
+            <button onclick="hideResetPin()" style="padding:10px 14px; background:#eee; color:#555; border:none; border-radius:10px; cursor:pointer;">ביטול</button>
           </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <div id="tokenStatus" style="font-size:0.82rem; font-weight:600; flex:1;"></div>
-            <button onclick="manualCloudLoad()" style="padding:6px 12px; background:#e8f5e9; color:#1a7a3a; border:1.5px solid #a5d6a7; border-radius:8px; cursor:pointer; font-size:0.8rem; font-weight:700; white-space:nowrap;">⬇️ טען עכשיו</button>
-          </div>
-          <div style="font-size:0.75rem; color:#aaa; margin-top:6px; line-height:1.5;">
-            צור Token ב: github.com → Settings → Developer settings<br>→ Personal access tokens → New token → סמן <b>public_repo</b>
-          </div>
+          <div id="resetPinError" style="display:none; color:#c0392b; font-size:0.85rem; text-align:center; margin-top:8px; font-weight:600;">❌ קוד שגוי</div>
         </div>
 
-        <div style="border-top:1px solid #eee; padding-top:14px; margin-bottom:14px;">
-          <div style="font-size:0.82rem; color:#999; text-align:center; margin-bottom:10px;">— או סנכרון ידני —</div>
-          <label style="font-size:0.88rem; color:#555; margin-bottom:6px;">קוד הנקודות הנוכחי:</label>
-          <div style="display:flex; gap:6px; margin-bottom:12px;">
-            <input id="syncExportCode" readonly style="flex:1; font-family:monospace; font-size:0.78rem; background:#f5f5f5; color:#333; margin-bottom:0;" />
-            <button onclick="copySyncCode()" id="copyBtn" style="padding:10px 14px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">📋 העתק</button>
-          </div>
-          <textarea id="syncImportCode" rows="2" placeholder="הדבק קוד מדפדפן אחר..." style="width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:10px; font-family:monospace; font-size:0.78rem; resize:none; margin-bottom:8px;"></textarea>
-          <button onclick="importSyncCode()" style="width:100%; padding:10px; background:#1a7a3a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.92rem; font-weight:700;">✅ ייבא נקודות</button>
-          <div id="syncFeedback" style="margin-top:8px; font-size:0.85rem; font-weight:600; display:none; text-align:center;"></div>
-        </div>
-
-        <div style="border-top:1px solid #eee; padding-top:14px; margin-top:4px;">
-          <div id="resetSection">
-            <button onclick="showResetPin()" style="width:100%; padding:10px; background:#fff0f0; color:#c0392b; border:1.5px solid #f5a0a0; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.88rem;">🗑️ אפס את כל הנקודות</button>
-          </div>
-          <div id="resetPinSection" style="display:none;">
-            <div style="font-size:0.85rem; color:#c0392b; font-weight:600; margin-bottom:8px; text-align:center;">הזן קוד לאישור:</div>
-            <div style="display:flex; gap:6px;">
-              <input type="password" id="resetPinInput" placeholder="קוד..." style="flex:1; font-family:monospace; font-size:1rem; text-align:center; margin-bottom:0;" maxlength="10" />
-              <button onclick="confirmReset()" style="padding:10px 14px; background:#c0392b; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">אשר</button>
-              <button onclick="hideResetPin()" style="padding:10px 14px; background:#eee; color:#555; border:none; border-radius:10px; cursor:pointer;">ביטול</button>
-            </div>
-            <div id="resetPinError" style="display:none; color:#c0392b; font-size:0.82rem; text-align:center; margin-top:6px; font-weight:600;">❌ קוד שגוי</div>
-          </div>
-        </div>
-        <button onclick="document.getElementById('syncPopup').style.display='none'" style="width:100%; padding:10px; background:#f0f0f0; color:#555; border:none; border-radius:10px; cursor:pointer; font-weight:600; margin-top:8px;">סגור</button>
+        <button onclick="document.getElementById('syncPopup').style.display='none'" style="width:100%; padding:10px; background:#f0f0f0; color:#555; border:none; border-radius:10px; cursor:pointer; font-weight:600; margin-top:16px;">סגור</button>
       </div>
     </div>
 
@@ -1075,39 +1044,8 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ---- Cloud sync (GitHub) ----
-const GH_REPO = 'bilytheking6969/trade-calculator';
-const GH_FILE = 'points.json';
-
-function getGHToken() { return localStorage.getItem('gh_pat') || ''; }
-
-async function saveGHToken() {
-  const tok = document.getElementById('ghTokenInput').value.trim();
-  if (!tok) return;
-  localStorage.setItem('gh_pat', tok);
-  document.getElementById('ghTokenInput').value = '';
-  const el = document.getElementById('tokenStatus');
-  el.textContent = '⏳ בודק...';
-  el.style.color = '#888';
-  await loadCloudPoints();
-  updateTokenStatus();
-}
-
-async function manualCloudLoad() {
-  const el = document.getElementById('tokenStatus');
-  el.textContent = '⏳ טוען...';
-  el.style.color = '#888';
-  await loadCloudPoints();
-  updateTokenStatus();
-}
-
-function updateTokenStatus() {
-  const el = document.getElementById('tokenStatus');
-  if (!el) return;
-  const tok = getGHToken();
-  el.textContent = tok ? '✅ Token שמור — סנכרון אוטומטי פעיל' : '❌ Token לא הוגדר';
-  el.style.color = tok ? '#1a7a3a' : '#c0392b';
-}
+// ---- Cloud sync (Vercel) ----
+const POINTS_URL = 'https://englishpractice-daclgs3x2-bilytheking6969s-projects.vercel.app/api/points';
 
 function collectLocalData() {
   const data = {};
@@ -1123,21 +1061,15 @@ function collectLocalData() {
 
 async function loadCloudPoints() {
   try {
-    const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
-    const headers = {};
-    const tok = getGHToken();
-    if (tok) headers['Authorization'] = 'Bearer ' + tok;
-    const r = await fetch(url, { headers });
+    const r = await fetch(POINTS_URL);
     if (!r.ok) return;
-    const meta = await r.json();
-    const data = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+    const data = await r.json();
     const ws = getWeekStart();
     ['alon','eitan','itai'].forEach(id => {
       const key = 'weekly_' + profiles[id].name;
       const cloud = data[key];
       if (cloud && cloud.weekStart >= ws) {
         const local = JSON.parse(localStorage.getItem(key) || '{"weekStart":0,"points":0}');
-        // Take the higher points within the same week
         if (cloud.points >= local.points) localStorage.setItem(key, JSON.stringify(cloud));
       }
     });
@@ -1151,64 +1083,20 @@ async function loadCloudPoints() {
 }
 
 async function saveCloudPoints() {
-  const tok = getGHToken();
-  if (!tok) return;
   try {
-    const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
-    const headers = { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' };
-    const r = await fetch(url, { headers });
-    if (!r.ok) return;
-    const meta = await r.json();
-    const sha = meta.sha;
-    const data = collectLocalData();
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-    await fetch(url, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ message: 'Update points', content, sha })
+    await fetch(POINTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(collectLocalData()),
     });
   } catch(e) {}
 }
 
-// ---- Sync across browsers ----
-function exportSyncCode() {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(collectLocalData()))));
-}
-
 function showSyncPopup() {
-  updateTokenStatus();
-  document.getElementById('syncExportCode').value = exportSyncCode();
-  document.getElementById('syncImportCode').value = '';
-  document.getElementById('syncFeedback').style.display = 'none';
+  document.getElementById('resetSection').style.display = 'block';
+  document.getElementById('resetPinSection').style.display = 'none';
+  document.getElementById('resetPinError').style.display = 'none';
   document.getElementById('syncPopup').style.display = 'flex';
-}
-
-function copySyncCode() {
-  const el = document.getElementById('syncExportCode');
-  el.select();
-  navigator.clipboard?.writeText(el.value).catch(() => document.execCommand('copy'));
-  const btn = document.getElementById('copyBtn');
-  btn.textContent = '✅ הועתק!';
-  setTimeout(() => { btn.textContent = '📋 העתק'; }, 2000);
-}
-
-function importSyncCode() {
-  const code = document.getElementById('syncImportCode').value.trim();
-  const fb = document.getElementById('syncFeedback');
-  if (!code) { fb.textContent = 'נא להדביק קוד'; fb.style.color = '#c0392b'; fb.style.display = 'block'; return; }
-  try {
-    const data = JSON.parse(decodeURIComponent(escape(atob(code))));
-    Object.keys(data).forEach(key => localStorage.setItem(key, JSON.stringify(data[key])));
-    updateProfileWeeklyPts();
-    fb.textContent = '✅ הנקודות עודכנו בהצלחה!';
-    fb.style.color = '#1a7a3a';
-    fb.style.display = 'block';
-    setTimeout(() => { document.getElementById('syncPopup').style.display = 'none'; }, 1500);
-  } catch(e) {
-    fb.textContent = 'קוד לא תקין — נסה שוב';
-    fb.style.color = '#c0392b';
-    fb.style.display = 'block';
-  }
 }
 
 function showResetPin() {
@@ -1235,16 +1123,13 @@ async function confirmReset() {
   ['alon','eitan','itai'].forEach(id => localStorage.removeItem('weekly_' + profiles[id].name));
   localStorage.removeItem('english_history');
   updateProfileWeeklyPts();
-  const tok = getGHToken();
-  if (tok) {
-    try {
-      const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
-      const r = await fetch(url, { headers: { Authorization: 'Bearer ' + tok } });
-      const meta = await r.json();
-      await fetch(url, { method: 'PUT', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Reset all points', content: btoa('{}'), sha: meta.sha }) });
-    } catch(e) {}
-  }
+  try {
+    await fetch(POINTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+  } catch(e) {}
   document.getElementById('syncPopup').style.display = 'none';
 }
 
