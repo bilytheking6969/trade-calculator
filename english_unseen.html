@@ -1066,7 +1066,10 @@ async function translateQuestion(i, btn) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 300,
-        messages: [{ role: 'user', content: `Translate this question and its options to Hebrew. Return ONLY the translation, no extra text.\n\nQuestion: ${qText}\n${opts}` }]
+        messages: [{ role: 'user', content: selectedProfile === 'itai'
+          ? `Translate this question and all its answer options to Hebrew. Return ONLY the translation, no extra text.\n\nQuestion: ${qText}\n${opts}`
+          : `Translate ONLY this question to Hebrew (do not translate the answer options). Return ONLY the Hebrew question, no extra text.\n\nQuestion: ${qText}`
+        }]
       }),
     });
     const data = await res.json();
