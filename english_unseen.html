@@ -450,23 +450,34 @@
     </div>
 
     <!-- Sync popup -->
-    <div id="syncPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
-      <div style="background:white; border-radius:20px; padding:28px; max-width:360px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-        <h3 style="color:#4c2f8a; margin-bottom:6px; text-align:center;">🔄 סנכרון נקודות</h3>
-        <p style="font-size:0.82rem; color:#888; text-align:center; margin-bottom:18px;">העבר נקודות בין דפדפנים או מכשירים</p>
+    <div id="syncPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:12px;">
+      <div style="background:white; border-radius:20px; padding:24px; max-width:380px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
+        <h3 style="color:#4c2f8a; margin-bottom:4px; text-align:center;">🔄 סנכרון אוטומטי</h3>
+        <p style="font-size:0.82rem; color:#888; text-align:center; margin-bottom:18px;">נקודות יישמרו בענן ויופיעו בכל מכשיר</p>
 
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.88rem; color:#555; margin-bottom:6px;">קוד הנקודות הנוכחי:</label>
-          <div style="display:flex; gap:6px;">
-            <input id="syncExportCode" readonly style="flex:1; font-family:monospace; font-size:0.78rem; background:#f5f5f5; color:#333; margin-bottom:0;" />
-            <button onclick="copySyncCode()" id="copyBtn" style="padding:10px 14px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">📋 העתק</button>
+        <!-- Token setup -->
+        <div style="background:#f8f5ff; border-radius:12px; padding:14px; margin-bottom:16px;">
+          <div style="font-size:0.88rem; font-weight:700; color:#4c2f8a; margin-bottom:8px;">⚡ הגדרה חד-פעמית (לאבא/אמא)</div>
+          <label style="font-size:0.82rem; color:#555; margin-bottom:6px;">GitHub Token:</label>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <input type="password" id="ghTokenInput" placeholder="ghp_..." style="flex:1; font-family:monospace; font-size:0.8rem; margin-bottom:0;" />
+            <button onclick="saveGHToken()" style="padding:10px 14px; background:#4c2f8a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">שמור</button>
+          </div>
+          <div id="tokenStatus" style="font-size:0.82rem; font-weight:600;"></div>
+          <div style="font-size:0.75rem; color:#aaa; margin-top:6px; line-height:1.5;">
+            צור Token ב: github.com → Settings → Developer settings<br>→ Personal access tokens → New token → סמן <b>public_repo</b>
           </div>
         </div>
 
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.88rem; color:#555; margin-bottom:6px;">הדבק קוד מדפדפן אחר:</label>
-          <textarea id="syncImportCode" rows="3" placeholder="הדבק כאן את הקוד..." style="width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:10px; font-family:monospace; font-size:0.78rem; resize:none; margin-bottom:8px;"></textarea>
-          <button onclick="importSyncCode()" style="width:100%; padding:11px; background:#1a7a3a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.95rem; font-weight:700;">✅ ייבא נקודות</button>
+        <div style="border-top:1px solid #eee; padding-top:14px; margin-bottom:14px;">
+          <div style="font-size:0.82rem; color:#999; text-align:center; margin-bottom:10px;">— או סנכרון ידני —</div>
+          <label style="font-size:0.88rem; color:#555; margin-bottom:6px;">קוד הנקודות הנוכחי:</label>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <input id="syncExportCode" readonly style="flex:1; font-family:monospace; font-size:0.78rem; background:#f5f5f5; color:#333; margin-bottom:0;" />
+            <button onclick="copySyncCode()" id="copyBtn" style="padding:10px 14px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">📋 העתק</button>
+          </div>
+          <textarea id="syncImportCode" rows="2" placeholder="הדבק קוד מדפדפן אחר..." style="width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:10px; font-family:monospace; font-size:0.78rem; resize:none; margin-bottom:8px;"></textarea>
+          <button onclick="importSyncCode()" style="width:100%; padding:10px; background:#1a7a3a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.92rem; font-weight:700;">✅ ייבא נקודות</button>
           <div id="syncFeedback" style="margin-top:8px; font-size:0.85rem; font-weight:600; display:none; text-align:center;"></div>
         </div>
 
@@ -969,6 +980,7 @@ async function submitExercise() {
   saveResult(childName, topic, correct, total);
   updateProfileWeeklyPts();
   await sendEmail(childName, correct, total, topic, pts, weekly);
+  saveCloudPoints(); // async, fire-and-forget
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitFeedback').style.display = 'block';
 }
@@ -1005,8 +1017,29 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ---- Sync across browsers ----
-function exportSyncCode() {
+// ---- Cloud sync (GitHub) ----
+const GH_REPO = 'bilytheking6969/trade-calculator';
+const GH_FILE = 'points.json';
+
+function getGHToken() { return localStorage.getItem('gh_pat') || ''; }
+
+function saveGHToken() {
+  const tok = document.getElementById('ghTokenInput').value.trim();
+  if (!tok) return;
+  localStorage.setItem('gh_pat', tok);
+  updateTokenStatus();
+  document.getElementById('ghTokenInput').value = '';
+}
+
+function updateTokenStatus() {
+  const el = document.getElementById('tokenStatus');
+  if (!el) return;
+  const tok = getGHToken();
+  el.textContent = tok ? '✅ Token שמור — סנכרון אוטומטי פעיל' : '❌ Token לא הוגדר';
+  el.style.color = tok ? '#1a7a3a' : '#c0392b';
+}
+
+function collectLocalData() {
   const data = {};
   ['alon','eitan','itai'].forEach(id => {
     const key = 'weekly_' + profiles[id].name;
@@ -1014,11 +1047,66 @@ function exportSyncCode() {
     if (val) data[key] = JSON.parse(val);
   });
   const hist = localStorage.getItem('english_history');
-  if (hist) data['english_history'] = JSON.parse(hist);
-  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  if (hist) data.english_history = JSON.parse(hist);
+  return data;
+}
+
+async function loadCloudPoints() {
+  try {
+    const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+    const headers = {};
+    const tok = getGHToken();
+    if (tok) headers['Authorization'] = 'Bearer ' + tok;
+    const r = await fetch(url, { headers });
+    if (!r.ok) return;
+    const meta = await r.json();
+    const data = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+    const ws = getWeekStart();
+    ['alon','eitan','itai'].forEach(id => {
+      const key = 'weekly_' + profiles[id].name;
+      const cloud = data[key];
+      if (cloud && cloud.weekStart >= ws) {
+        const local = JSON.parse(localStorage.getItem(key) || '{"weekStart":0,"points":0}');
+        // Take the higher points within the same week
+        if (cloud.points >= local.points) localStorage.setItem(key, JSON.stringify(cloud));
+      }
+    });
+    if (data.english_history) {
+      const local = JSON.parse(localStorage.getItem('english_history') || '[]');
+      if (data.english_history.length >= local.length)
+        localStorage.setItem('english_history', JSON.stringify(data.english_history));
+    }
+    updateProfileWeeklyPts();
+  } catch(e) {}
+}
+
+async function saveCloudPoints() {
+  const tok = getGHToken();
+  if (!tok) return;
+  try {
+    const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+    const headers = { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' };
+    const r = await fetch(url, { headers });
+    if (!r.ok) return;
+    const meta = await r.json();
+    const sha = meta.sha;
+    const data = collectLocalData();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ message: 'Update points', content, sha })
+    });
+  } catch(e) {}
+}
+
+// ---- Sync across browsers ----
+function exportSyncCode() {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(collectLocalData()))));
 }
 
 function showSyncPopup() {
+  updateTokenStatus();
   document.getElementById('syncExportCode').value = exportSyncCode();
   document.getElementById('syncImportCode').value = '';
   document.getElementById('syncFeedback').style.display = 'none';
@@ -1059,6 +1147,7 @@ document.getElementById('topic').addEventListener('keydown', e => { if (e.key ==
 // Init
 updateProfileWeeklyPts();
 renderDiff();
+loadCloudPoints();
 </script>
 </body>
 </html>
