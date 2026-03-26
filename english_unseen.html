@@ -636,6 +636,7 @@ function saveResult(childName, topic, score, total) {
     score,
     total,
     pct: Math.round(score / total * 100),
+    diff: diffOffset,
     date: new Date().toISOString()
   });
   localStorage.setItem(key, JSON.stringify(history));
@@ -648,6 +649,27 @@ function getMonthHistory(childName) {
   return history.filter(r => r.child === childName && new Date(r.date).getTime() > monthAgo);
 }
 
+// ---- Difficulty recommendation ----
+function getDiffRecommendation(childName, history) {
+  if (history.length < 3) return null; // not enough data
+  const recent = history.slice(-5); // last 5 exercises
+  const avgDiff = recent.reduce((s, r) => s + (r.diff ?? 2), 0) / recent.length;
+  const avgPct  = recent.reduce((s, r) => s + r.pct, 0) / recent.length;
+  const avgDiffAll = history.reduce((s, r) => s + (r.diff ?? 2), 0) / history.length;
+  const diffLabelsArr = ['קלה מאוד','קלה','רגילה','מאתגרת','קשה'];
+
+  if (avgDiff >= 3.5 && avgPct >= 80) {
+    return `🔼 המלצה: כדאי להקשות את הרמה הבסיסית של ${childName}!\n   ב-${recent.length} התרגילים האחרונים בחר/ה רמה ממוצעת "${diffLabelsArr[Math.round(avgDiff)]}" והשיג/ה ${Math.round(avgPct)}% — מוכן/ה לאתגר גדול יותר.`;
+  }
+  if (avgDiff >= 3 && avgPct >= 90) {
+    return `🔼 המלצה: ${childName} מצטיין/ת ברמה ${diffLabelsArr[Math.round(avgDiff)]} (${Math.round(avgPct)}% ממוצע) — שווה לשקול להעלות רמה.`;
+  }
+  if (avgDiff <= 1 && avgPct < 60) {
+    return `🔽 שים לב: ${childName} מתקשה גם ברמות הקלות (${Math.round(avgPct)}% ממוצע) — אולי כדאי להוריד את הרמה הבסיסית.`;
+  }
+  return null;
+}
+
 // ---- Email (Formsubmit) ----
 async function sendEmail(childName, score, total, topic, pts=0, weekly=0) {
   const history = getMonthHistory(childName);
@@ -655,17 +677,21 @@ async function sendEmail(childName, score, total, topic, pts=0, weekly=0) {
     ? Math.round(history.reduce((s, r) => s + r.pct, 0) / history.length)
     : Math.round(score / total * 100);
 
+  const diffLabelsArr = ['קלה מאוד','קלה','רגילה','מאתגרת','קשה'];
   const historyLines = history.map((r, i) => {
     const d = new Date(r.date).toLocaleDateString('he-IL');
-    return `${i + 1}. ${d} | ${r.topic} | ${r.score}/${r.total} (${r.pct}%)`;
+    const diffLabel = diffLabelsArr[r.diff ?? 2];
+    return `${i + 1}. ${d} | ${r.topic} | ${r.score}/${r.total} (${r.pct}%) | רמה: ${diffLabel}`;
   }).join('\n');
 
-  const totalMonthPts = history.reduce((s,r) => s + (r.score * (10 + (r.diffOffset||2)*5)), 0);
+  const recommendation = getDiffRecommendation(childName, history);
+
   const body = `✅ תרגיל חדש הושלם!
 ━━━━━━━━━━━━━━━━━━━━━━
 👤 שם: ${childName}
 📚 נושא: ${topic}
 🎯 ציון: ${score}/${total} (${Math.round(score/total*100)}%)
+📊 רמת קושי: ${diffLabelsArr[diffOffset]}
 ⭐ נקודות תרגיל זה: ${pts}
 📅 נקודות השבוע: ${weekly} (מתאפס כל רביעי)
 
@@ -674,7 +700,7 @@ async function sendEmail(childName, score, total, topic, pts=0, weekly=0) {
 ━━━━━━━━━━━━━━━━━━━━━━
 מספר תרגילים: ${history.length}
 ממוצע ציון: ${avgPct}%
-
+${recommendation ? '\n' + recommendation + '\n' : ''}
 ${historyLines || 'אין היסטוריה'}`;
 
   try {
