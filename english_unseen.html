@@ -481,7 +481,13 @@
     <div class="output-grid">
       <!-- Left: passage -->
       <div class="passage-card">
-        <div class="passage-label">📄 Read the text</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div class="passage-label" style="margin-bottom:0;">📄 Read the text</div>
+          <div style="display:flex; gap:8px;">
+            <button id="ttsBtn" onclick="toggleTTS()" style="background:#764ba2;color:white;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.88rem;font-weight:600;">🔊 הקרא</button>
+            <button id="ttsStop" onclick="stopTTS()" style="display:none;background:#c0392b;color:white;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.88rem;font-weight:600;">⏹ עצור</button>
+          </div>
+        </div>
         <div class="passage-text" id="passageText"></div>
       </div>
 
@@ -547,6 +553,33 @@ function addWeeklyPoints(childName, pts) {
   data.points += pts;
   localStorage.setItem(key, JSON.stringify(data));
   return data.points;
+}
+
+// ---- Text to Speech ----
+function toggleTTS() {
+  if (speechSynthesis.speaking) { stopTTS(); return; }
+  const text = document.getElementById('passageText').textContent;
+  if (!text) return;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'en-US';
+  utt.rate = 0.88;
+  // Pick best English voice if available
+  const voices = speechSynthesis.getVoices();
+  const eng = voices.find(v => v.lang.startsWith('en') && v.localService) || voices.find(v => v.lang.startsWith('en'));
+  if (eng) utt.voice = eng;
+  utt.onend = () => {
+    document.getElementById('ttsBtn').textContent = '🔊 הקרא';
+    document.getElementById('ttsStop').style.display = 'none';
+  };
+  speechSynthesis.speak(utt);
+  document.getElementById('ttsBtn').textContent = '🔊 מקריא...';
+  document.getElementById('ttsStop').style.display = 'inline-block';
+}
+
+function stopTTS() {
+  speechSynthesis.cancel();
+  document.getElementById('ttsBtn').textContent = '🔊 הקרא';
+  document.getElementById('ttsStop').style.display = 'none';
 }
 
 function toggleBreakdown() {
