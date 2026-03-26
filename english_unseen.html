@@ -498,8 +498,8 @@
 
     <div class="profiles-label" style="margin-bottom:10px;">סוג הטקסט</div>
     <div style="display:flex; gap:12px; margin-bottom:20px;">
-      <button id="typeStory" class="type-btn active" onclick="selectTextType('story')">📖 סיפורי</button>
-      <button id="typeScience" class="type-btn" onclick="selectTextType('science')">🔬 מדעי</button>
+      <button id="typeStory" class="type-btn" onclick="selectTextType('story')">📖 סיפורי</button>
+      <button id="typeScience" class="type-btn active" onclick="selectTextType('science')">🔬 מדעי</button>
     </div>
 
     <div class="difficulty-row">
@@ -883,6 +883,7 @@ const DIFF_STEPS = 5; // -2 .. +2
 let selectedProfile = null;
 let diffOffset = 2; // default = middle = "רגילה"
 let parsedData = null;
+let textType = 'science';
 
 function selectProfile(id) {
   selectedProfile = id;
