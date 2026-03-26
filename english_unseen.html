@@ -425,6 +425,7 @@
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
       <div class="profiles-label" style="margin-bottom:0">מי מתרגל היום?</div>
       <div style="display:flex;gap:6px;">
+        <button onclick="lockSite()" style="background:none;border:1.5px solid #aaa;color:#555;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🔒 נעל</button>
         <button onclick="showSyncPopup()" style="background:none;border:1.5px solid #f5a0a0;color:#c0392b;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🗑️ איפוס</button>
         <button onclick="showPointsPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🏅 טבלת ניקוד</button>
       </div>
@@ -466,6 +467,15 @@
         <p style="font-size:0.8rem; color:#aaa; margin-top:6px;">הנקודות השבועיות מתאפסות כל רביעי בחצות</p>
         <button onclick="document.getElementById('pointsPopup').style.display='none'" style="margin-top:16px; padding:10px 28px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">סגור</button>
       </div>
+    </div>
+
+    <!-- Lock screen -->
+    <div id="lockScreen" style="display:none; position:fixed; inset:0; background:rgba(30,20,60,0.97); z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+      <div style="font-size:3rem;">🔒</div>
+      <div style="color:white; font-size:1.3rem; font-weight:700;">האתר נעול</div>
+      <input id="lockPinInput" type="password" placeholder="הכנס קוד לפתיחה" style="padding:12px 16px; border-radius:10px; border:none; font-size:1rem; text-align:center; width:220px;" onkeydown="if(event.key==='Enter') unlockSite()" />
+      <div id="lockPinError" style="color:#ff8080; font-size:0.9rem; display:none;">קוד שגוי</div>
+      <button onclick="unlockSite()" style="padding:12px 32px; background:#764ba2; color:white; border:none; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer;">פתח</button>
     </div>
 
     <!-- Sync popup -->
@@ -1286,6 +1296,24 @@ async function saveCloudPoints() {
   } catch(e) {}
 }
 
+function lockSite() {
+  localStorage.setItem('site_locked', '1');
+  document.getElementById('lockScreen').style.display = 'flex';
+  document.getElementById('lockPinInput').value = '';
+  document.getElementById('lockPinError').style.display = 'none';
+  document.getElementById('lockPinInput').focus();
+}
+
+function unlockSite() {
+  const entered = document.getElementById('lockPinInput').value.trim();
+  if (entered !== String(2 * 140192)) {
+    document.getElementById('lockPinError').style.display = 'block';
+    return;
+  }
+  localStorage.removeItem('site_locked');
+  document.getElementById('lockScreen').style.display = 'none';
+}
+
 function showSyncPopup() {
   document.getElementById('resetSection').style.display = 'block';
   document.getElementById('resetPinSection').style.display = 'none';
@@ -1334,6 +1362,7 @@ document.getElementById('topic').addEventListener('keydown', e => { if (e.key ==
 updateProfileWeeklyPts();
 renderDiff();
 loadCloudPoints();
+if (localStorage.getItem('site_locked')) lockSite();
 </script>
 </body>
 </html>
