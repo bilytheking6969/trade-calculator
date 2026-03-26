@@ -468,6 +468,15 @@
         <div class="score-bar" id="scoreBar" style="display:none">
           <h4>תוצאה סופית</h4>
           <div><span class="score-val" id="scoreVal">0</span><span class="score-total" id="scoreTot"> / 0</span></div>
+          <div style="margin-top:12px; font-size:1.4rem; font-weight:800; color:#4c2f8a;">
+            <span id="pointsEarned">0</span> נקודות
+          </div>
+          <div style="margin-top:6px; font-size:0.9rem; color:#888;">
+            סה"כ השבוע: <span id="weeklyPoints" style="font-weight:700; color:#764ba2;">0</span> נקודות
+          </div>
+          <button onclick="toggleBreakdown()" style="margin-top:10px; background:none; border:1.5px solid #c4a8e8; color:#764ba2; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:0.85rem; font-weight:600;">📊 פירוט נקודות</button>
+          <div id="pointsBreakdown" style="display:none; margin-top:12px; background:#f8f5ff; border-radius:10px; padding:12px; text-align:right; font-size:0.88rem; color:#444; line-height:1.8;">
+          </div>
         </div>
         <div id="submitSection" style="display:none; text-align:center; margin-top:20px;">
           <button class="generate-btn" id="submitBtn" onclick="submitExercise()">📨 הגש משימה</button>
@@ -486,6 +495,40 @@
 <script>
 const _k = ['sk-ant-api03-4ra7nU3YyRUI3vIQRjTk2GaaYt9Mr3', 'elmiX1NdEPaF2-JConqDIjobfAL-FYnAsdX0IDy139dzILRrxktAbzlQ-k718JwAA'].join('');
 function getApiKey() { return _k; }
+
+// ---- Points ----
+function getPointsPerQ() { return 10 + diffOffset * 5; } // 10,15,20,25,30
+
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun,3=Wed
+  const diff = (day - 3 + 7) % 7;
+  const wed = new Date(now);
+  wed.setDate(now.getDate() - diff);
+  wed.setHours(0, 0, 0, 0);
+  return wed.getTime();
+}
+
+function getWeeklyData(childName) {
+  const key = `weekly_${childName}`;
+  const data = JSON.parse(localStorage.getItem(key) || '{"weekStart":0,"points":0}');
+  const ws = getWeekStart();
+  if (data.weekStart < ws) return { weekStart: ws, points: 0 };
+  return data;
+}
+
+function addWeeklyPoints(childName, pts) {
+  const key = `weekly_${childName}`;
+  const data = getWeeklyData(childName);
+  data.points += pts;
+  localStorage.setItem(key, JSON.stringify(data));
+  return data.points;
+}
+
+function toggleBreakdown() {
+  const el = document.getElementById('pointsBreakdown');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
 
 // ---- History (localStorage) ----
 function saveResult(childName, topic, score, total) {
@@ -510,7 +553,7 @@ function getMonthHistory(childName) {
 }
 
 // ---- Email (Formsubmit) ----
-async function sendEmail(childName, score, total, topic) {
+async function sendEmail(childName, score, total, topic, pts=0, weekly=0) {
   const history = getMonthHistory(childName);
   const avgPct  = history.length
     ? Math.round(history.reduce((s, r) => s + r.pct, 0) / history.length)
@@ -525,6 +568,8 @@ async function sendEmail(childName, score, total, topic) {
 שם: ${childName}
 נושא: ${topic}
 ציון: ${score}/${total} (${Math.round(score/total*100)}%)
+נקודות תרגיל זה: ${pts}
+נקודות השבוע (מאפס ברביעי): ${weekly}
 
 --- סיכום חודש אחרון (${history.length} תרגילים, ממוצע ${avgPct}%) ---
 ${historyLines || 'אין היסטוריה'}`;
@@ -568,7 +613,7 @@ function selectTextType(type) {
 const profiles = {
   alon:  { name: 'אלון',  baseGrade: 7 },
   eitan: { name: 'איתן', baseGrade: 5 },
-  itai:  { name: 'איתי',  baseGrade: 3 },
+  itai:  { name: 'איתי',  baseGrade: 1 },
 };
 
 // ---- Grade levels ----
@@ -787,8 +832,17 @@ function checkAnswer(i) {
   // Show score when all answered
   const total = parsedData.questions.length;
   if (Object.keys(answered).length === total) {
+    const ppq   = getPointsPerQ();
+    const pts   = correct * ppq;
+    const diffLabelsArr = ['קלה מאוד','קלה','רגילה','מאתגרת','קשה'];
     document.getElementById('scoreVal').textContent = correct;
     document.getElementById('scoreTot').textContent = ' / ' + total;
+    document.getElementById('pointsEarned').textContent = pts;
+    document.getElementById('pointsBreakdown').innerHTML =
+      `רמת קושי: <b>${diffLabelsArr[diffOffset]}</b><br>` +
+      `נקודות לשאלה נכונה: <b>${ppq}</b><br>` +
+      `תשובות נכונות: <b>${correct}/${total}</b><br>` +
+      `סה"כ תרגיל זה: <b>${pts} נקודות</b>`;
     document.getElementById('scoreBar').style.display = 'block';
     document.getElementById('submitSection').style.display = 'block';
     document.getElementById('scoreBar').scrollIntoView({ behavior: 'smooth' });
@@ -797,10 +851,14 @@ function checkAnswer(i) {
 
 async function submitExercise() {
   const childName = profiles[selectedProfile]?.name || selectedProfile;
-  const topic = document.getElementById('topic').value.trim();
-  const total = parsedData.questions.length;
+  const topic     = document.getElementById('topic').value.trim();
+  const total     = parsedData.questions.length;
+  const ppq       = getPointsPerQ();
+  const pts       = correct * ppq;
+  const weekly    = addWeeklyPoints(childName, pts);
+  document.getElementById('weeklyPoints').textContent = weekly;
   saveResult(childName, topic, correct, total);
-  await sendEmail(childName, correct, total, topic);
+  await sendEmail(childName, correct, total, topic, pts, weekly);
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitFeedback').style.display = 'block';
 }
