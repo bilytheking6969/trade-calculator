@@ -931,7 +931,8 @@ async function generate() {
   const rlKey = 'rl_' + selectedProfile;
   const now = Date.now();
   const rl = JSON.parse(localStorage.getItem(rlKey) || '[]').filter(t => now - t < 3600000);
-  if (rl.length >= 3) {
+  const maxTexts = selectedProfile === 'itai' ? 5 : 3;
+  if (rl.length >= maxTexts) {
     const wait = Math.ceil((3600000 - (now - rl[0])) / 60000);
     showError(`${profiles[selectedProfile].name} כבר יצר 3 טקסטים בשעה האחרונה. יש להמתין עוד ${wait} דקות.`);
     return;
