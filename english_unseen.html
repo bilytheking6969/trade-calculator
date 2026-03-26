@@ -927,6 +927,16 @@ async function generate() {
   if (!selectedProfile) { showError('נא לבחור ילד'); return; }
   if (!topic) { showError('נא להזין נושא'); return; }
 
+  // Rate limit: max 3 texts per hour per child
+  const rlKey = 'rl_' + selectedProfile;
+  const now = Date.now();
+  const rl = JSON.parse(localStorage.getItem(rlKey) || '[]').filter(t => now - t < 3600000);
+  if (rl.length >= 3) {
+    const wait = Math.ceil((3600000 - (now - rl[0])) / 60000);
+    showError(`${profiles[selectedProfile].name} כבר יצר 3 טקסטים בשעה האחרונה. יש להמתין עוד ${wait} דקות.`);
+    return;
+  }
+
   const g = gradeLevels[gradeIndex()];
   const prompt = buildPrompt(topic, g, textType);
 
@@ -956,6 +966,8 @@ async function generate() {
     const data = await res.json();
     const text = data.content[0].text;
     parsedData = parseResponse(text);
+    rl.push(Date.now());
+    localStorage.setItem(rlKey, JSON.stringify(rl));
     renderOutput(parsedData);
   } catch (e) {
     showError('שגיאה: ' + e.message);
