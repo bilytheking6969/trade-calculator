@@ -484,7 +484,10 @@
           <div id="syncFeedback" style="margin-top:8px; font-size:0.85rem; font-weight:600; display:none; text-align:center;"></div>
         </div>
 
-        <button onclick="document.getElementById('syncPopup').style.display='none'" style="width:100%; padding:10px; background:#f0f0f0; color:#555; border:none; border-radius:10px; cursor:pointer; font-weight:600;">סגור</button>
+        <div style="border-top:1px solid #eee; padding-top:14px; margin-top:4px;">
+          <button onclick="resetAllPoints()" style="width:100%; padding:10px; background:#fff0f0; color:#c0392b; border:1.5px solid #f5a0a0; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.88rem;">🗑️ אפס את כל הנקודות</button>
+        </div>
+        <button onclick="document.getElementById('syncPopup').style.display='none'" style="width:100%; padding:10px; background:#f0f0f0; color:#555; border:none; border-radius:10px; cursor:pointer; font-weight:600; margin-top:8px;">סגור</button>
       </div>
     </div>
 
@@ -709,10 +712,49 @@ ${historyLines || 'אין היסטוריה'}`;
 
 // ---- Topic suggestions per profile ----
 const topicSuggestions = {
-  alon:  ['גלישה','כדורסל','געשי הרים','חקר החלל','כרישים','משחקי וידאו','רומא העתיקה','רובוטים','כדורגל','בעלי חיים בים','ספורט אתגרי','תעלומות האוקיינוס'],
-  eitan: ['כלבים','כדורגל','דינוזאורים','יערות הגשם','גיבורי על','בישול','כוכבי לכת','פינגווינים','רכבות','קסם','כבאים','נהר האמזונס'],
-  itai:  ['חתולים','גלידה','פרפרים','צעצועים','החוף','צפרדעים','בלונים','קשת בענן','בעלי חיים קטנים','פיצה','טירות חול','גן חיות'],
-  default: ['בעלי חיים','ספורט','טבע','מדע','אוכל','היסטוריה','טכנולוגיה','מוזיקה'],
+  alon: [
+    'גלישת גלים ענקיים בהוואי',
+    'כוכבי NBA ומרוץ לאליפות',
+    'כרישי לבן – ציידים שלא ישנים לעולם',
+    'SpaceX ואילון מאסק – לכבוש את מאדים',
+    'לוחמי UFC ואמנות ה-MMA',
+    'Minecraft לעומת Fortnite – מי מנצח?',
+    'גלדיאטורים ברומא – קרבות חיים ומוות',
+    'הר גועש מתפרץ מתחת לים',
+    'יצורי עמקי הים שלא ידעת שקיימים',
+    'שחקני כדורגל שכתבו היסטוריה',
+    'פארקור – לטוס בין בניינים',
+    'רובוטים שיחליפו בני אדם – מה המדע אומר?',
+  ],
+  eitan: [
+    'כלבים שהצילו חיים – סיפורים אמיתיים',
+    'מסי לעומת רונאלדו – מי הגדול?',
+    'T-Rex לעומת ספינוזאורוס – מי חזק יותר?',
+    'הסודות הנסתרים של ג׳ונגל האמזונס',
+    'ספיידרמן לעומת בלק פנתר – מי מנצח?',
+    'שף בן 10 שמכין פיצה כמו איטלקי אמיתי',
+    'סופרנובה – כוכב שמתפוצץ בחלל',
+    'פינגווינים בקוטב הדרומי – איך שורדים?',
+    'רכבות הקליע שבוקעות את הרוח',
+    'קסמים שמדענים כבר הסבירו',
+    'כבאים גיבורים – 10 שניות שמצילות חיים',
+    'נחשים ארסיים – מה קורה לגוף בעקיצה?',
+  ],
+  itai: [
+    'גורי אריות שלומדים לצוד עם אמא',
+    'גלידה מוזרה – הטעמים הכי מוזרים בעולם',
+    'פרפרים שעפים אלפי קילומטרים לבד',
+    'כלבלבים שמשחקים בחוף הים',
+    'צפרדעים צבעוניות – למה הן כל כך צבעוניות?',
+    'טיסה בבלון ענק – מה רואים מגובה?',
+    'הסוס הכי מהיר בעולם',
+    'חיות הכי קטנות וחמודות שקיימות',
+    'אסטרונאוט אוכל פיצה בחלל',
+    'ילד שבנה טירת חול ענקית',
+    'מה קורה בגן חיות אחרי שנסגר בלילה?',
+    'דינוזאורים קטנים ומדהימים',
+  ],
+  default: ['חיות בר מסוכנות','ספורט קיצוני','טבע מדהים','מדע מגניב','אוכל מסביב לעולם','הרפתקאות','עתיד הרובוטים','מוזיקה'],
 };
 
 let textType = 'story';
@@ -738,6 +780,8 @@ const profiles = {
 
 // ---- Grade levels ----
 const gradeLevels = [
+  { label: 'Pre-K A',    words: 15,  level: 'absolute beginner: use ONLY the 30 most common English words (the, a, cat, dog, run, big, eat, play, go, happy, red, blue, yes, no, see, I, is, it, can, has). Maximum 3-4 words per sentence. Like a baby book.' },
+  { label: 'Pre-K B',    words: 25,  level: 'absolute beginner: use only the 60 most basic English words. Every sentence must be 3-5 words only. No grammar beyond simple present.' },
   { label: '1st grade',  words: 40,  level: 'extremely simple: only basic words like "go, eat, big, small, happy". Maximum 1 clause per sentence. Like a picture book.' },
   { label: '2nd grade',  words: 55,  level: 'very simple: only the 300 most common English words. Very short sentences. No complex grammar.' },
   { label: '3rd grade',  words: 70,  level: 'simple: common everyday words only. Short sentences. Present and past tense only.' },
@@ -1154,6 +1198,26 @@ function importSyncCode() {
     fb.style.color = '#c0392b';
     fb.style.display = 'block';
   }
+}
+
+async function resetAllPoints() {
+  if (!confirm('למחוק את כל הנקודות וההיסטוריה של כולם?')) return;
+  ['alon','eitan','itai'].forEach(id => localStorage.removeItem('weekly_' + profiles[id].name));
+  localStorage.removeItem('english_history');
+  updateProfileWeeklyPts();
+  // Clear cloud too
+  const tok = getGHToken();
+  if (tok) {
+    try {
+      const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+      const r = await fetch(url, { headers: { Authorization: 'Bearer ' + tok } });
+      const meta = await r.json();
+      const content = btoa('{}');
+      await fetch(url, { method: 'PUT', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Reset all points', content, sha: meta.sha }) });
+    } catch(e) {}
+  }
+  document.getElementById('syncPopup').style.display = 'none';
 }
 
 // Allow Enter key to generate
