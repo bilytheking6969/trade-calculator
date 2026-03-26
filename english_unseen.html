@@ -485,7 +485,18 @@
         </div>
 
         <div style="border-top:1px solid #eee; padding-top:14px; margin-top:4px;">
-          <button onclick="resetAllPoints()" style="width:100%; padding:10px; background:#fff0f0; color:#c0392b; border:1.5px solid #f5a0a0; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.88rem;">🗑️ אפס את כל הנקודות</button>
+          <div id="resetSection">
+            <button onclick="showResetPin()" style="width:100%; padding:10px; background:#fff0f0; color:#c0392b; border:1.5px solid #f5a0a0; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.88rem;">🗑️ אפס את כל הנקודות</button>
+          </div>
+          <div id="resetPinSection" style="display:none;">
+            <div style="font-size:0.85rem; color:#c0392b; font-weight:600; margin-bottom:8px; text-align:center;">הזן קוד לאישור:</div>
+            <div style="display:flex; gap:6px;">
+              <input type="password" id="resetPinInput" placeholder="קוד..." style="flex:1; font-family:monospace; font-size:1rem; text-align:center; margin-bottom:0;" maxlength="10" />
+              <button onclick="confirmReset()" style="padding:10px 14px; background:#c0392b; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">אשר</button>
+              <button onclick="hideResetPin()" style="padding:10px 14px; background:#eee; color:#555; border:none; border-radius:10px; cursor:pointer;">ביטול</button>
+            </div>
+            <div id="resetPinError" style="display:none; color:#c0392b; font-size:0.82rem; text-align:center; margin-top:6px; font-weight:600;">❌ קוד שגוי</div>
+          </div>
         </div>
         <button onclick="document.getElementById('syncPopup').style.display='none'" style="width:100%; padding:10px; background:#f0f0f0; color:#555; border:none; border-radius:10px; cursor:pointer; font-weight:600; margin-top:8px;">סגור</button>
       </div>
@@ -1200,21 +1211,38 @@ function importSyncCode() {
   }
 }
 
-async function resetAllPoints() {
-  if (!confirm('למחוק את כל הנקודות וההיסטוריה של כולם?')) return;
+function showResetPin() {
+  document.getElementById('resetSection').style.display = 'none';
+  document.getElementById('resetPinSection').style.display = 'block';
+  document.getElementById('resetPinInput').value = '';
+  document.getElementById('resetPinError').style.display = 'none';
+  document.getElementById('resetPinInput').focus();
+}
+
+function hideResetPin() {
+  document.getElementById('resetPinSection').style.display = 'none';
+  document.getElementById('resetSection').style.display = 'block';
+}
+
+async function confirmReset() {
+  const entered = document.getElementById('resetPinInput').value.trim();
+  if (entered !== String(2*140192)) { // 280384
+    document.getElementById('resetPinError').style.display = 'block';
+    document.getElementById('resetPinInput').value = '';
+    return;
+  }
+  hideResetPin();
   ['alon','eitan','itai'].forEach(id => localStorage.removeItem('weekly_' + profiles[id].name));
   localStorage.removeItem('english_history');
   updateProfileWeeklyPts();
-  // Clear cloud too
   const tok = getGHToken();
   if (tok) {
     try {
       const url = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
       const r = await fetch(url, { headers: { Authorization: 'Bearer ' + tok } });
       const meta = await r.json();
-      const content = btoa('{}');
       await fetch(url, { method: 'PUT', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Reset all points', content, sha: meta.sha }) });
+        body: JSON.stringify({ message: 'Reset all points', content: btoa('{}'), sha: meta.sha }) });
     } catch(e) {}
   }
   document.getElementById('syncPopup').style.display = 'none';
