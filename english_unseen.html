@@ -926,7 +926,17 @@ function parseResponse(text) {
 function renderOutput(data) {
   setLoading(false);
 
-  document.getElementById('passageText').textContent = data.passage;
+  const passageEl = document.getElementById('passageText');
+  passageEl.textContent = data.passage;
+  const words = data.passage.split(/\s+/).length;
+  const size = words <= 10 ? '1.9rem'
+             : words <= 20 ? '1.6rem'
+             : words <= 35 ? '1.35rem'
+             : words <= 60 ? '1.15rem'
+             : words <= 100 ? '1.05rem'
+             : '0.97rem';
+  passageEl.style.fontSize = size;
+  passageEl.style.lineHeight = words <= 20 ? '2.2' : words <= 60 ? '2.0' : '1.8';
 
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
