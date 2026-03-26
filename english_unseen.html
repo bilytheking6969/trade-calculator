@@ -540,18 +540,18 @@ const profiles = {
 
 // ---- Grade levels ----
 const gradeLevels = [
-  { label: '1st grade',  words: 100, level: 'very simple, short sentences' },
-  { label: '2nd grade',  words: 110, level: 'very simple' },
-  { label: '3rd grade',  words: 130, level: 'simple' },
-  { label: '4th grade',  words: 150, level: 'simple' },
-  { label: '5th grade',  words: 170, level: 'elementary' },
-  { label: '6th grade',  words: 190, level: 'elementary-intermediate' },
-  { label: '7th grade',  words: 210, level: 'intermediate' },
-  { label: '8th grade',  words: 230, level: 'intermediate' },
-  { label: '9th grade',  words: 250, level: 'upper-intermediate' },
-  { label: '10th grade', words: 270, level: 'upper-intermediate' },
-  { label: '11th grade', words: 290, level: 'advanced' },
-  { label: '12th grade', words: 310, level: 'advanced' },
+  { label: '1st grade',  words: 40,  level: 'extremely simple: only basic words like "go, eat, big, small, happy". Maximum 1 clause per sentence. Like a picture book.' },
+  { label: '2nd grade',  words: 55,  level: 'very simple: only the 300 most common English words. Very short sentences. No complex grammar.' },
+  { label: '3rd grade',  words: 70,  level: 'simple: common everyday words only. Short sentences. Present and past tense only.' },
+  { label: '4th grade',  words: 90,  level: 'simple: basic vocabulary. Simple sentences. Avoid idioms or complex structures.' },
+  { label: '5th grade',  words: 110, level: 'elementary: familiar vocabulary. Simple and compound sentences only.' },
+  { label: '6th grade',  words: 130, level: 'elementary-intermediate: common vocabulary. Some compound sentences.' },
+  { label: '7th grade',  words: 150, level: 'intermediate: general vocabulary. Varied sentence structures.' },
+  { label: '8th grade',  words: 170, level: 'intermediate: broader vocabulary. Mix of sentence types.' },
+  { label: '9th grade',  words: 190, level: 'upper-intermediate: rich vocabulary. Complex sentences.' },
+  { label: '10th grade', words: 210, level: 'upper-intermediate: academic vocabulary.' },
+  { label: '11th grade', words: 230, level: 'advanced: sophisticated vocabulary and structures.' },
+  { label: '12th grade', words: 250, level: 'advanced: native-level vocabulary and complex ideas.' },
 ];
 const NUM_QUESTIONS = 8;
 
@@ -643,14 +643,14 @@ async function generate() {
 }
 
 function buildPrompt(topic, g) {
-  return `You are an English teacher creating a reading comprehension exercise for Israeli students.
+  return `You are an English teacher creating a reading comprehension exercise for Israeli students who are learning English as a foreign language.
 
 Student level: ${g.label} — English proficiency: ${g.level}
 Topic: "${topic}"
 
 Instructions:
-1. Write a short English reading passage of approximately ${g.words} words about the topic. Use vocabulary and sentence complexity appropriate for ${g.level} English learners. Make it engaging and age-appropriate.
-2. Write exactly 8 multiple-choice comprehension questions. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
+1. Write an English reading passage of approximately ${g.words} words about the topic. STRICTLY follow the vocabulary and complexity level: ${g.level}. Do NOT use words above this level. Make it fun and age-appropriate.
+2. Write exactly 8 multiple-choice comprehension questions at the SAME language level as the passage. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
 
 Output ONLY valid JSON in this exact format (no markdown, no extra text):
 {
