@@ -599,8 +599,6 @@ function updateProfileWeeklyPts() {
   });
 }
 
-// Run on load
-updateProfileWeeklyPts();
 
 // ---- History (localStorage) ----
 function saveResult(childName, topic, score, total) {
@@ -750,8 +748,6 @@ function changeDiff(delta) {
   renderDiff();
 }
 
-// init
-renderDiff();
 
 async function generate() {
   const topic  = document.getElementById('topic').value.trim();
@@ -972,6 +968,10 @@ function escHtml(s) {
 
 // Allow Enter key to generate
 document.getElementById('topic').addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
+
+// Init
+updateProfileWeeklyPts();
+renderDiff();
 </script>
 </body>
 </html>
