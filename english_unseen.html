@@ -943,7 +943,27 @@ async function generate() {
   const maxTexts = selectedProfile === 'itai' ? 6 : 4;
   if (rl.length >= maxTexts) {
     const wait = Math.ceil((3600000 - (now - rl[0])) / 60000);
-    showError(`${profiles[selectedProfile].name} כבר יצר 3 טקסטים בשעה האחרונה. יש להמתין עוד ${wait} דקות.`);
+    const errBox = document.getElementById('errorBox');
+    errBox.innerHTML = `${profiles[selectedProfile].name} כבר יצר ${maxTexts} טקסטים בשעה האחרונה. יש להמתין עוד ${wait} דקות.
+      <div style="margin-top:8px;">
+        <input id="overridePinInput" type="password" placeholder="קוד הורה לחריגה" style="padding:6px 10px;border-radius:7px;border:1px solid #ccc;font-size:0.9rem;width:170px;" />
+        <button onclick="overrideLimit()" style="margin-right:6px;padding:6px 12px;background:#764ba2;color:white;border:none;border-radius:7px;cursor:pointer;font-size:0.9rem;">אשר</button>
+        <span id="overridePinError" style="color:#c0392b;font-size:0.85rem;display:none;"> קוד שגוי</span>
+      </div>`;
+    errBox.className = 'error-box active';
+    return;
+  }
+
+  // Check for repeated topics (last 5)
+  const topicKey = 'topics_' + selectedProfile;
+  const recentTopics = JSON.parse(localStorage.getItem(topicKey) || '[]');
+  const topicLower = topic.toLowerCase();
+  const duplicate = recentTopics.find(t => {
+    const tLower = t.toLowerCase();
+    return tLower === topicLower || tLower.includes(topicLower) || topicLower.includes(tLower);
+  });
+  if (duplicate) {
+    showError(`נושא זה דומה מאוד לנושא שכבר תורגל לאחרונה ("${duplicate}"). בחר נושא אחר.`);
     return;
   }
 
@@ -978,6 +998,10 @@ async function generate() {
     parsedData = parseResponse(text);
     rl.push(Date.now());
     localStorage.setItem(rlKey, JSON.stringify(rl));
+    // save recent topics (last 5)
+    const recentTopics2 = JSON.parse(localStorage.getItem('topics_' + selectedProfile) || '[]');
+    recentTopics2.push(topic);
+    localStorage.setItem('topics_' + selectedProfile, JSON.stringify(recentTopics2.slice(-5)));
     saveCloudPoints(); // sync rate limit to cloud
     renderOutput(parsedData);
   } catch (e) {
@@ -1311,6 +1335,22 @@ function lockSite() {
   document.getElementById('lockPinInput').value = '';
   document.getElementById('lockPinError').style.display = 'none';
   document.getElementById('lockPinInput').focus();
+}
+
+function overrideLimit() {
+  const entered = document.getElementById('overridePinInput')?.value.trim();
+  if (entered !== String(2 * 140192)) {
+    document.getElementById('overridePinError').style.display = 'inline';
+    return;
+  }
+  // grant one extra generation by removing oldest timestamp
+  const rlKey = 'rl_' + selectedProfile;
+  const rl = JSON.parse(localStorage.getItem(rlKey) || '[]');
+  rl.shift();
+  localStorage.setItem(rlKey, JSON.stringify(rl));
+  document.getElementById('errorBox').className = 'error-box';
+  document.getElementById('errorBox').textContent = '';
+  generate();
 }
 
 function unlockSite() {
