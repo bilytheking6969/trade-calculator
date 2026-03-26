@@ -448,6 +448,10 @@
           <h4>תוצאה סופית</h4>
           <div><span class="score-val" id="scoreVal">0</span><span class="score-total" id="scoreTot"> / 0</span></div>
         </div>
+        <div id="submitSection" style="display:none; text-align:center; margin-top:20px;">
+          <button class="generate-btn" id="submitBtn" onclick="submitExercise()">📨 הגש משימה</button>
+          <div id="submitFeedback" style="margin-top:12px; font-weight:600; color:#1a7a3a; display:none;">✅ המשימה הוגשה! אבא/אמא קיבלו הודעה.</div>
+        </div>
       </div>
     </div>
 
@@ -753,13 +757,19 @@ function checkAnswer(i) {
     document.getElementById('scoreVal').textContent = correct;
     document.getElementById('scoreTot').textContent = ' / ' + total;
     document.getElementById('scoreBar').style.display = 'block';
+    document.getElementById('submitSection').style.display = 'block';
     document.getElementById('scoreBar').scrollIntoView({ behavior: 'smooth' });
-    // Save & send email notification
-    const childName = profiles[selectedProfile]?.name || selectedProfile;
-    const topic = document.getElementById('topic').value.trim();
-    saveResult(childName, topic, correct, total);
-    sendEmail(childName, correct, total, topic);
   }
+}
+
+async function submitExercise() {
+  const childName = profiles[selectedProfile]?.name || selectedProfile;
+  const topic = document.getElementById('topic').value.trim();
+  const total = parsedData.questions.length;
+  saveResult(childName, topic, correct, total);
+  await sendEmail(childName, correct, total, topic);
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitFeedback').style.display = 'block';
 }
 
 function setLoading(on) {
