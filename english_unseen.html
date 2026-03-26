@@ -351,9 +351,10 @@
       font-size: 0.9rem;
       color: #555;
     }
-    .profile-btn .avatar { font-size: 2rem; display: block; margin-bottom: 4px; }
-    .profile-btn .name   { font-weight: 700; font-size: 1rem; color: #333; display: block; }
-    .profile-btn .grade  { font-size: 0.8rem; color: #888; display: block; margin-top: 2px; }
+    .profile-btn .avatar      { font-size: 2rem; display: block; margin-bottom: 4px; }
+    .profile-btn .name        { font-weight: 700; font-size: 1rem; color: #333; display: block; }
+    .profile-btn .grade       { font-size: 0.8rem; color: #888; display: block; margin-top: 2px; }
+    .profile-btn .weekly-pts  { font-size: 0.78rem; color: #764ba2; font-weight: 700; display: block; margin-top: 4px; }
     .profile-btn:hover   { border-color: #764ba2; background: #f0e8fa; }
     .profile-btn.active  { border-color: #764ba2; background: #f0e8fa; box-shadow: 0 0 0 3px rgba(118,75,162,0.15); }
     .profile-btn.active .name { color: #764ba2; }
@@ -402,23 +403,46 @@
     <h1>📖 תרגול אנגלית</h1>
     <p class="subtitle">בחר ילד, הזן נושא וקלוד יכין טקסט ושאלות הבנה</p>
 
-    <div class="profiles-label">מי מתרגל היום?</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <div class="profiles-label" style="margin-bottom:0">מי מתרגל היום?</div>
+      <button onclick="showPointsPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🏅 טבלת ניקוד</button>
+    </div>
     <div class="profiles">
       <button class="profile-btn" id="prof-alon" onclick="selectProfile('alon')">
         <span class="avatar">🏄</span>
         <span class="name">אלון</span>
         <span class="grade">כיתה ז׳</span>
+        <span class="weekly-pts" id="weekly-alon">⭐ 0 נק׳</span>
       </button>
       <button class="profile-btn" id="prof-eitan" onclick="selectProfile('eitan')">
         <span class="avatar">⚽</span>
         <span class="name">איתן</span>
         <span class="grade">כיתה ה׳</span>
+        <span class="weekly-pts" id="weekly-eitan">⭐ 0 נק׳</span>
       </button>
       <button class="profile-btn" id="prof-itai" onclick="selectProfile('itai')">
         <span class="avatar">🎮</span>
         <span class="name">איתי</span>
         <span class="grade">כיתה ג׳</span>
+        <span class="weekly-pts" id="weekly-itai">⭐ 0 נק׳</span>
       </button>
+    </div>
+
+    <!-- Points popup -->
+    <div id="pointsPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:20px; padding:28px; max-width:320px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <h3 style="color:#4c2f8a; margin-bottom:16px;">🏅 ניקוד לפי רמה</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+          <tr style="background:#f0e8fa;"><th style="padding:8px; border-radius:8px 0 0 8px;">רמה</th><th style="padding:8px;">נק׳ לשאלה</th><th style="padding:8px; border-radius:0 8px 8px 0;">סה"כ (5 שאלות)</th></tr>
+          <tr><td style="padding:7px;">קלה מאוד</td><td>10</td><td>50</td></tr>
+          <tr style="background:#faf7ff;"><td style="padding:7px;">קלה</td><td>15</td><td>75</td></tr>
+          <tr><td style="padding:7px; font-weight:700; color:#764ba2;">רגילה ★</td><td style="font-weight:700;">20</td><td style="font-weight:700;">100</td></tr>
+          <tr style="background:#faf7ff;"><td style="padding:7px;">מאתגרת</td><td>25</td><td>125</td></tr>
+          <tr><td style="padding:7px;">קשה</td><td>30</td><td>150</td></tr>
+        </table>
+        <p style="font-size:0.8rem; color:#aaa; margin-top:12px;">הנקודות השבועיות מתאפסות כל רביעי בחצות</p>
+        <button onclick="document.getElementById('pointsPopup').style.display='none'" style="margin-top:16px; padding:10px 28px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">סגור</button>
+      </div>
     </div>
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
@@ -530,6 +554,21 @@ function toggleBreakdown() {
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+function showPointsPopup() {
+  document.getElementById('pointsPopup').style.display = 'flex';
+}
+
+function updateProfileWeeklyPts() {
+  ['alon','eitan','itai'].forEach(id => {
+    const pts = getWeeklyData(profiles[id].name).points;
+    const el = document.getElementById('weekly-' + id);
+    if (el) el.textContent = `⭐ ${pts} נק׳`;
+  });
+}
+
+// Run on load
+updateProfileWeeklyPts();
+
 // ---- History (localStorage) ----
 function saveResult(childName, topic, score, total) {
   const key = 'english_history';
@@ -564,14 +603,21 @@ async function sendEmail(childName, score, total, topic, pts=0, weekly=0) {
     return `${i + 1}. ${d} | ${r.topic} | ${r.score}/${r.total} (${r.pct}%)`;
   }).join('\n');
 
-  const body = `תרגיל חדש הושלם!
-שם: ${childName}
-נושא: ${topic}
-ציון: ${score}/${total} (${Math.round(score/total*100)}%)
-נקודות תרגיל זה: ${pts}
-נקודות השבוע (מאפס ברביעי): ${weekly}
+  const totalMonthPts = history.reduce((s,r) => s + (r.score * (10 + (r.diffOffset||2)*5)), 0);
+  const body = `✅ תרגיל חדש הושלם!
+━━━━━━━━━━━━━━━━━━━━━━
+👤 שם: ${childName}
+📚 נושא: ${topic}
+🎯 ציון: ${score}/${total} (${Math.round(score/total*100)}%)
+⭐ נקודות תרגיל זה: ${pts}
+📅 נקודות השבוע: ${weekly} (מתאפס כל רביעי)
 
---- סיכום חודש אחרון (${history.length} תרגילים, ממוצע ${avgPct}%) ---
+━━━━━━━━━━━━━━━━━━━━━━
+📊 סיכום חודש אחרון
+━━━━━━━━━━━━━━━━━━━━━━
+מספר תרגילים: ${history.length}
+ממוצע ציון: ${avgPct}%
+
 ${historyLines || 'אין היסטוריה'}`;
 
   try {
@@ -858,6 +904,7 @@ async function submitExercise() {
   const weekly    = addWeeklyPoints(childName, pts);
   document.getElementById('weeklyPoints').textContent = weekly;
   saveResult(childName, topic, correct, total);
+  updateProfileWeeklyPts();
   await sendEmail(childName, correct, total, topic, pts, weekly);
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitFeedback').style.display = 'block';
