@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>תרגול אנגלית – Unseen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 16px 12px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #4c2f8a;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 10px 8px; }
+      .card { padding: 16px; border-radius: 16px; }
+      h1 { font-size: 1.35rem; }
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 28px;
+      font-size: 1rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      background: #fafafa;
+      color: #222;
+      margin-bottom: 18px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #764ba2;
+      background: white;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 500px) { .row { grid-template-columns: 1fr; } }
+
+    .api-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .api-row input { margin-bottom: 0; flex: 1; font-family: monospace; font-size: 0.85rem; }
+    .toggle-key {
+      background: none;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #555;
+      white-space: nowrap;
+    }
+    .toggle-key:hover { border-color: #764ba2; color: #764ba2; }
+
+    .generate-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 15px rgba(118,75,162,0.4);
+    }
+
+    .generate-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(118,75,162,0.5);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: #764ba2;
+      font-size: 1.1rem;
+    }
+    .loader.active { display: block; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 5px solid #e0d0f5;
+      border-top-color: #764ba2;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Output */
+    .output { display: none; }
+    .output.active { display: block; }
+
+    .output-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 680px) {
+      .output-grid { grid-template-columns: 1fr; }
+    }
+
+    .passage-card {
+      background: #f8f5ff;
+      border-left: 5px solid #764ba2;
+      border-radius: 12px;
+      padding: 20px;
+      position: sticky;
+      top: 10px;
+    }
+    @media (max-width: 680px) {
+      .passage-card { position: static; }
+    }
+
+    .passage-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #764ba2;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .passage-text {
+      direction: ltr;
+      text-align: left;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #222;
+      white-space: pre-wrap;
+    }
+
+    .questions-section h3 {
+      color: #4c2f8a;
+      font-size: 1.2rem;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e8e0f5;
+    }
+
+    .question-block {
+      background: #fafafa;
+      border: 2px solid #e8e0f5;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .question-block:hover { border-color: #c4a8e8; }
+
+    .question-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #764ba2;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .question-text {
+      direction: ltr;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .options {
+      direction: ltr;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.95rem;
+      color: #333;
+      min-height: 44px; /* touch-friendly */
+    }
+    .option:hover { background: #f0e8fa; }
+    .option input[type=radio] { accent-color: #764ba2; width: 17px; height: 17px; flex-shrink: 0; margin: 0; }
+
+    .option.correct { background: #d4f7dc; color: #1a7a3a; font-weight: 600; }
+    .option.wrong   { background: #ffe0e0; color: #c0392b; }
+
+    .check-btn {
+      margin-top: 10px;
+      padding: 10px 22px;
+      background: #764ba2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.15s;
+      min-height: 44px;
+    }
+    .check-btn:hover { background: #5a3680; }
+    .check-btn:disabled { background: #bbb; cursor: default; }
+
+    .feedback {
+      direction: rtl;
+      text-align: right;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    .score-bar {
+      margin-top: 28px;
+      background: #f0e8fa;
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .score-bar h4 { color: #4c2f8a; font-size: 1.1rem; margin-bottom: 8px; }
+    .score-bar .score-val { font-size: 2.5rem; font-weight: 800; color: #764ba2; }
+    .score-bar .score-total { font-size: 1rem; color: #888; }
+
+    .regenerate-btn {
+      margin-top: 20px;
+      padding: 12px 28px;
+      background: white;
+      color: #764ba2;
+      border: 2.5px solid #764ba2;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .regenerate-btn:hover { background: #764ba2; color: white; }
+
+    .error-box {
+      background: #ffe0e0;
+      border: 2px solid #f5a0a0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: #c0392b;
+      font-size: 0.95rem;
+      display: none;
+    }
+    .error-box.active { display: block; }
+
+    /* Profiles */
+    .profiles-label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+    .profiles {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .profile-btn {
+      flex: 1;
+      padding: 12px 6px;
+      border: 2.5px solid #e0d0f5;
+      border-radius: 14px;
+      background: #faf7ff;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .profile-btn .avatar { font-size: 2rem; display: block; margin-bottom: 4px; }
+    .profile-btn .name   { font-weight: 700; font-size: 1rem; color: #333; display: block; }
+    .profile-btn .grade  { font-size: 0.8rem; color: #888; display: block; margin-top: 2px; }
+    .profile-btn:hover   { border-color: #764ba2; background: #f0e8fa; }
+    .profile-btn.active  { border-color: #764ba2; background: #f0e8fa; box-shadow: 0 0 0 3px rgba(118,75,162,0.15); }
+    .profile-btn.active .name { color: #764ba2; }
+
+    /* Difficulty */
+    .difficulty-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .difficulty-label { font-weight: 600; color: #333; font-size: 0.95rem; flex-shrink: 0; }
+    .diff-btn {
+      width: 36px; height: 36px;
+      border: 2px solid #c4a8e8;
+      border-radius: 8px;
+      background: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #764ba2;
+      font-weight: 700;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .diff-btn:hover { background: #764ba2; color: white; border-color: #764ba2; }
+    .diff-btn:disabled { opacity: 0.3; cursor: default; }
+    .diff-track {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+    }
+    .diff-pip {
+      flex: 1; height: 8px; border-radius: 4px;
+      background: #e0d0f5;
+      transition: background 0.2s;
+    }
+    .diff-pip.filled { background: #764ba2; }
+    .diff-text { font-size: 0.85rem; color: #888; flex-shrink: 0; min-width: 70px; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Input Card -->
+  <div class="card" id="inputCard">
+    <h1>📖 תרגול אנגלית</h1>
+    <p class="subtitle">בחר ילד, הזן נושא וקלוד יכין טקסט ושאלות הבנה</p>
+
+    <div class="profiles-label">מי מתרגל היום?</div>
+    <div class="profiles">
+      <button class="profile-btn" id="prof-alon" onclick="selectProfile('alon')">
+        <span class="avatar">🏄</span>
+        <span class="name">אלון</span>
+        <span class="grade">כיתה ז׳</span>
+      </button>
+      <button class="profile-btn" id="prof-eitan" onclick="selectProfile('eitan')">
+        <span class="avatar">⚽</span>
+        <span class="name">איתן</span>
+        <span class="grade">כיתה ה׳</span>
+      </button>
+      <button class="profile-btn" id="prof-itai" onclick="selectProfile('itai')">
+        <span class="avatar">🎮</span>
+        <span class="name">איתי</span>
+        <span class="grade">כיתה ג׳</span>
+      </button>
+    </div>
+
+    <label for="topic">נושא (בעברית או אנגלית)</label>
+    <input type="text" id="topic" placeholder="למשל: כדורגל, חיות, חלל..." />
+
+    <div class="difficulty-row">
+      <span class="difficulty-label">רמה:</span>
+      <button class="diff-btn" id="diffDown" onclick="changeDiff(-1)">−</button>
+      <div class="diff-track" id="diffTrack"></div>
+      <span class="diff-text" id="diffText">רגילה</span>
+      <button class="diff-btn" id="diffUp" onclick="changeDiff(+1)">+</button>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="generate-btn" id="generateBtn" onclick="generate()">✨ צור טקסט ושאלות</button>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p>קלוד כותב טקסט מותאם אישית...</p>
+  </div>
+
+  <!-- Output Card -->
+  <div class="card output" id="outputCard">
+    <div class="output-grid">
+      <!-- Left: passage -->
+      <div class="passage-card">
+        <div class="passage-label">📄 Read the text</div>
+        <div class="passage-text" id="passageText"></div>
+      </div>
+
+      <!-- Right: questions -->
+      <div class="questions-section">
+        <h3>❓ Comprehension Questions</h3>
+        <div id="questionsContainer"></div>
+        <div class="score-bar" id="scoreBar" style="display:none">
+          <h4>תוצאה סופית</h4>
+          <div><span class="score-val" id="scoreVal">0</span><span class="score-total" id="scoreTot"> / 0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:16px;">
+      <button class="regenerate-btn" onclick="resetAll()">🔄 נסה נושא אחר</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// API key stored in localStorage — parent sets it once per device
+function getApiKey() { return localStorage.getItem('eng_api_key') || ''; }
+function setApiKey(k) { localStorage.setItem('eng_api_key', k); }
+
+// ---- History (localStorage) ----
+function saveResult(childName, topic, score, total) {
+  const key = 'english_history';
+  const history = JSON.parse(localStorage.getItem(key) || '[]');
+  history.push({
+    child: childName,
+    topic,
+    score,
+    total,
+    pct: Math.round(score / total * 100),
+    date: new Date().toISOString()
+  });
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+function getMonthHistory(childName) {
+  const key = 'english_history';
+  const history = JSON.parse(localStorage.getItem(key) || '[]');
+  const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  return history.filter(r => r.child === childName && new Date(r.date).getTime() > monthAgo);
+}
+
+// ---- Email (Formsubmit) ----
+async function sendEmail(childName, score, total, topic) {
+  const history = getMonthHistory(childName);
+  const avgPct  = history.length
+    ? Math.round(history.reduce((s, r) => s + r.pct, 0) / history.length)
+    : Math.round(score / total * 100);
+
+  const historyLines = history.map((r, i) => {
+    const d = new Date(r.date).toLocaleDateString('he-IL');
+    return `${i + 1}. ${d} | ${r.topic} | ${r.score}/${r.total} (${r.pct}%)`;
+  }).join('\n');
+
+  const body = `תרגיל חדש הושלם!
+שם: ${childName}
+נושא: ${topic}
+ציון: ${score}/${total} (${Math.round(score/total*100)}%)
+
+--- סיכום חודש אחרון (${history.length} תרגילים, ממוצע ${avgPct}%) ---
+${historyLines || 'אין היסטוריה'}`;
+
+  try {
+    await fetch('https://formsubmit.co/ajax/milraditamar@gmail.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: `📚 ${childName} סיים תרגיל | ממוצע חודשי ${avgPct}%`,
+        message: body,
+        _template: 'basic'
+      })
+    });
+  } catch(e) { /* silent */ }
+}
+
+// ---- Profiles ----
+const profiles = {
+  alon:  { name: 'אלון',  baseGrade: 7 },
+  eitan: { name: 'איתן', baseGrade: 5 },
+  itai:  { name: 'איתי',  baseGrade: 3 },
+};
+
+// ---- Grade levels ----
+const gradeLevels = [
+  { label: '1st grade',  words: 100, level: 'very simple, short sentences' },
+  { label: '2nd grade',  words: 110, level: 'very simple' },
+  { label: '3rd grade',  words: 130, level: 'simple' },
+  { label: '4th grade',  words: 150, level: 'simple' },
+  { label: '5th grade',  words: 170, level: 'elementary' },
+  { label: '6th grade',  words: 190, level: 'elementary-intermediate' },
+  { label: '7th grade',  words: 210, level: 'intermediate' },
+  { label: '8th grade',  words: 230, level: 'intermediate' },
+  { label: '9th grade',  words: 250, level: 'upper-intermediate' },
+  { label: '10th grade', words: 270, level: 'upper-intermediate' },
+  { label: '11th grade', words: 290, level: 'advanced' },
+  { label: '12th grade', words: 310, level: 'advanced' },
+];
+const NUM_QUESTIONS = 10;
+
+const diffLabels = ['קלה מאוד', 'קלה', 'רגילה', 'מאתגרת', 'קשה'];
+const DIFF_STEPS = 5; // -2 .. +2
+
+let selectedProfile = null;
+let diffOffset = 2; // default = middle = "רגילה"
+let parsedData = null;
+
+function selectProfile(id) {
+  selectedProfile = id;
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('prof-' + id).classList.add('active');
+  renderDiff();
+}
+
+function gradeIndex() {
+  if (!selectedProfile) return 6;
+  const base = profiles[selectedProfile].baseGrade - 1; // 0-indexed
+  return Math.max(0, Math.min(gradeLevels.length - 1, base + diffOffset - 2));
+}
+
+function renderDiff() {
+  const track = document.getElementById('diffTrack');
+  track.innerHTML = '';
+  for (let i = 0; i < DIFF_STEPS; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'diff-pip' + (i <= diffOffset ? ' filled' : '');
+    track.appendChild(pip);
+  }
+  document.getElementById('diffText').textContent = diffLabels[diffOffset];
+  document.getElementById('diffDown').disabled = diffOffset === 0;
+  document.getElementById('diffUp').disabled   = diffOffset === DIFF_STEPS - 1;
+}
+
+function changeDiff(delta) {
+  diffOffset = Math.max(0, Math.min(DIFF_STEPS - 1, diffOffset + delta));
+  renderDiff();
+}
+
+// init
+renderDiff();
+
+async function generate() {
+  const topic  = document.getElementById('topic').value.trim();
+  const errBox = document.getElementById('errorBox');
+
+  errBox.className = 'error-box';
+  errBox.textContent = '';
+
+  if (!getApiKey()) {
+    const k = prompt('הזן מפתח API (הורים בלבד):');
+    if (!k) return;
+    setApiKey(k.trim());
+  }
+  if (!selectedProfile) { showError('נא לבחור ילד'); return; }
+  if (!topic) { showError('נא להזין נושא'); return; }
+
+  const g = gradeLevels[gradeIndex()];
+  const prompt = buildPrompt(topic, g);
+
+  setLoading(true);
+
+  try {
+    const res = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': getApiKey(),
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-request-blocking': 'false',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1800,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.content[0].text;
+    parsedData = parseResponse(text);
+    renderOutput(parsedData);
+  } catch (e) {
+    showError('שגיאה: ' + e.message);
+    setLoading(false);
+  }
+}
+
+function buildPrompt(topic, g) {
+  return `You are an English teacher creating a reading comprehension exercise for Israeli students.
+
+Student level: ${g.label} — English proficiency: ${g.level}
+Topic: "${topic}"
+
+Instructions:
+1. Write a short English reading passage of approximately ${g.words} words about the topic. Use vocabulary and sentence complexity appropriate for ${g.level} English learners. Make it engaging and age-appropriate.
+2. Write exactly 10 multiple-choice comprehension questions. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
+
+Output ONLY valid JSON in this exact format (no markdown, no extra text):
+{
+  "passage": "The full passage text here...",
+  "questions": [
+    {
+      "question": "Question text here?",
+      "options": ["A. option one", "B. option two", "C. option three", "D. option four"],
+      "answer": "A"
+    }
+  ]
+}`;
+}
+
+function parseResponse(text) {
+  // Strip markdown fences if present
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+function renderOutput(data) {
+  setLoading(false);
+
+  document.getElementById('passageText').textContent = data.passage;
+
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+
+  data.questions.forEach((q, i) => {
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.dataset.answer = q.answer.charAt(0).toUpperCase();
+
+    block.innerHTML = `
+      <div class="question-num">שאלה ${i + 1}</div>
+      <div class="question-text">${escHtml(q.question)}</div>
+      <div class="options" id="opts_${i}">
+        ${q.options.map((opt, oi) => {
+          const letter = String.fromCharCode(65 + oi); // A, B, C, D
+          return `<label class="option">
+            <input type="radio" name="q${i}" value="${letter}" onchange="clearFeedback(${i})">
+            ${escHtml(opt)}
+          </label>`;
+        }).join('')}
+      </div>
+      <button class="check-btn" onclick="checkAnswer(${i})">בדוק ✓</button>
+      <div class="feedback" id="fb_${i}"></div>
+    `;
+    container.appendChild(block);
+  });
+
+  document.getElementById('outputCard').className = 'card output active';
+  document.getElementById('outputCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+let answered = {};
+let correct  = 0;
+
+function clearFeedback(i) {
+  if (answered[i]) return; // already submitted
+  document.getElementById('fb_' + i).style.display = 'none';
+}
+
+function checkAnswer(i) {
+  if (answered[i]) return;
+
+  const block   = document.querySelectorAll('.question-block')[i];
+  const chosen  = block.querySelector('input[type=radio]:checked');
+  const fb      = document.getElementById('fb_' + i);
+
+  if (!chosen) { fb.textContent = 'בחר תשובה תחילה'; fb.style.color = '#c0392b'; fb.style.display = 'block'; return; }
+
+  const correctLetter = block.dataset.answer;
+  const isRight = chosen.value === correctLetter;
+
+  // Style options
+  block.querySelectorAll('label.option').forEach(label => {
+    const inp = label.querySelector('input');
+    if (inp.value === correctLetter) label.classList.add('correct');
+    else if (inp.value === chosen.value && !isRight) label.classList.add('wrong');
+    inp.disabled = true;
+  });
+
+  fb.style.display = 'block';
+  if (isRight) {
+    fb.textContent = '✅ נכון! כל הכבוד';
+    fb.style.color = '#1a7a3a';
+    correct++;
+  } else {
+    fb.textContent = `❌ לא נכון. התשובה הנכונה היא ${correctLetter}`;
+    fb.style.color = '#c0392b';
+  }
+
+  block.querySelector('.check-btn').disabled = true;
+  answered[i] = true;
+
+  // Show score when all answered
+  const total = parsedData.questions.length;
+  if (Object.keys(answered).length === total) {
+    document.getElementById('scoreVal').textContent = correct;
+    document.getElementById('scoreTot').textContent = ' / ' + total;
+    document.getElementById('scoreBar').style.display = 'block';
+    document.getElementById('scoreBar').scrollIntoView({ behavior: 'smooth' });
+    // Save & send email notification
+    const childName = profiles[selectedProfile]?.name || selectedProfile;
+    const topic = document.getElementById('topic').value.trim();
+    saveResult(childName, topic, correct, total);
+    sendEmail(childName, correct, total, topic);
+  }
+}
+
+function setLoading(on) {
+  document.getElementById('loader').className   = on ? 'loader active' : 'loader';
+  document.getElementById('generateBtn').disabled = on;
+  if (on) document.getElementById('outputCard').className = 'card output';
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = msg;
+  b.className = 'error-box active';
+}
+
+function resetAll() {
+  parsedData = null;
+  answered   = {};
+  correct    = 0;
+  document.getElementById('questionsContainer').innerHTML = '';
+  document.getElementById('scoreBar').style.display = 'none';
+  document.getElementById('outputCard').className = 'card output';
+  document.getElementById('topic').value = '';
+  document.getElementById('inputCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Allow Enter key to generate
+document.getElementById('topic').addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
+</script>
+</body>
+</html>
