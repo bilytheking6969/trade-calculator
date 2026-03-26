@@ -406,7 +406,10 @@
       </button>
     </div>
 
-    <label for="topic">נושא (בעברית או אנגלית)</label>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <label for="topic" style="margin-bottom:0">נושא (בעברית או אנגלית)</label>
+      <button onclick="suggestTopic()" style="background:none;border:none;color:#764ba2;font-size:0.88rem;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:8px;border:1.5px solid #c4a8e8;">🎲 הצע נושא</button>
+    </div>
     <input type="text" id="topic" placeholder="למשל: כדורגל, חיות, חלל..." />
 
     <div class="difficulty-row">
@@ -515,6 +518,20 @@ ${historyLines || 'אין היסטוריה'}`;
   } catch(e) { /* silent */ }
 }
 
+// ---- Topic suggestions per profile ----
+const topicSuggestions = {
+  alon:  ['surfing','basketball','volcanoes','space exploration','sharks','video games','ancient Rome','robots','football','ocean animals','extreme sports','mysteries of the deep sea'],
+  eitan: ['dogs','soccer','dinosaurs','rainforest','superheroes','cooking','planets','penguins','trains','magic','firefighters','the Amazon river'],
+  itai:  ['cats','ice cream','butterflies','toys','the beach','frogs','balloons','rainbows','baby animals','pizza','sandcastles','the zoo'],
+  default: ['animals','sports','nature','science','food','history','technology','music'],
+};
+
+function suggestTopic() {
+  const list = (selectedProfile && topicSuggestions[selectedProfile]) || topicSuggestions.default;
+  const pick = list[Math.floor(Math.random() * list.length)];
+  document.getElementById('topic').value = pick;
+}
+
 // ---- Profiles ----
 const profiles = {
   alon:  { name: 'אלון',  baseGrade: 7 },
@@ -537,7 +554,7 @@ const gradeLevels = [
   { label: '11th grade', words: 290, level: 'advanced' },
   { label: '12th grade', words: 310, level: 'advanced' },
 ];
-const NUM_QUESTIONS = 10;
+const NUM_QUESTIONS = 8;
 
 const diffLabels = ['קלה מאוד', 'קלה', 'רגילה', 'מאתגרת', 'קשה'];
 const DIFF_STEPS = 5; // -2 .. +2
@@ -639,7 +656,7 @@ Topic: "${topic}"
 
 Instructions:
 1. Write a short English reading passage of approximately ${g.words} words about the topic. Use vocabulary and sentence complexity appropriate for ${g.level} English learners. Make it engaging and age-appropriate.
-2. Write exactly 10 multiple-choice comprehension questions. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
+2. Write exactly 8 multiple-choice comprehension questions. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
 
 Output ONLY valid JSON in this exact format (no markdown, no extra text):
 {
