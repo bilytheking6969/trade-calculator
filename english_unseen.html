@@ -405,7 +405,10 @@
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
       <div class="profiles-label" style="margin-bottom:0">מי מתרגל היום?</div>
-      <button onclick="showPointsPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🏅 טבלת ניקוד</button>
+      <div style="display:flex;gap:6px;">
+        <button onclick="showSyncPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🔄 סנכרון</button>
+        <button onclick="showPointsPopup()" style="background:none;border:1.5px solid #c4a8e8;color:#764ba2;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.82rem;font-weight:600;">🏅 טבלת ניקוד</button>
+      </div>
     </div>
     <div class="profiles">
       <button class="profile-btn" id="prof-alon" onclick="selectProfile('alon')">
@@ -442,6 +445,31 @@
         </table>
         <p style="font-size:0.8rem; color:#aaa; margin-top:12px;">הנקודות השבועיות מתאפסות כל רביעי בחצות</p>
         <button onclick="document.getElementById('pointsPopup').style.display='none'" style="margin-top:16px; padding:10px 28px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">סגור</button>
+      </div>
+    </div>
+
+    <!-- Sync popup -->
+    <div id="syncPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:20px; padding:28px; max-width:360px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <h3 style="color:#4c2f8a; margin-bottom:6px; text-align:center;">🔄 סנכרון נקודות</h3>
+        <p style="font-size:0.82rem; color:#888; text-align:center; margin-bottom:18px;">העבר נקודות בין דפדפנים או מכשירים</p>
+
+        <div style="margin-bottom:18px;">
+          <label style="font-size:0.88rem; color:#555; margin-bottom:6px;">קוד הנקודות הנוכחי:</label>
+          <div style="display:flex; gap:6px;">
+            <input id="syncExportCode" readonly style="flex:1; font-family:monospace; font-size:0.78rem; background:#f5f5f5; color:#333; margin-bottom:0;" />
+            <button onclick="copySyncCode()" id="copyBtn" style="padding:10px 14px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">📋 העתק</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="font-size:0.88rem; color:#555; margin-bottom:6px;">הדבק קוד מדפדפן אחר:</label>
+          <textarea id="syncImportCode" rows="3" placeholder="הדבק כאן את הקוד..." style="width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:10px; font-family:monospace; font-size:0.78rem; resize:none; margin-bottom:8px;"></textarea>
+          <button onclick="importSyncCode()" style="width:100%; padding:11px; background:#1a7a3a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.95rem; font-weight:700;">✅ ייבא נקודות</button>
+          <div id="syncFeedback" style="margin-top:8px; font-size:0.85rem; font-weight:600; display:none; text-align:center;"></div>
+        </div>
+
+        <button onclick="document.getElementById('syncPopup').style.display='none'" style="width:100%; padding:10px; background:#f0f0f0; color:#555; border:none; border-radius:10px; cursor:pointer; font-weight:600;">סגור</button>
       </div>
     </div>
 
@@ -964,6 +992,54 @@ function resetAll() {
 
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ---- Sync across browsers ----
+function exportSyncCode() {
+  const data = {};
+  ['alon','eitan','itai'].forEach(id => {
+    const key = 'weekly_' + profiles[id].name;
+    const val = localStorage.getItem(key);
+    if (val) data[key] = JSON.parse(val);
+  });
+  const hist = localStorage.getItem('english_history');
+  if (hist) data['english_history'] = JSON.parse(hist);
+  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+}
+
+function showSyncPopup() {
+  document.getElementById('syncExportCode').value = exportSyncCode();
+  document.getElementById('syncImportCode').value = '';
+  document.getElementById('syncFeedback').style.display = 'none';
+  document.getElementById('syncPopup').style.display = 'flex';
+}
+
+function copySyncCode() {
+  const el = document.getElementById('syncExportCode');
+  el.select();
+  navigator.clipboard?.writeText(el.value).catch(() => document.execCommand('copy'));
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '✅ הועתק!';
+  setTimeout(() => { btn.textContent = '📋 העתק'; }, 2000);
+}
+
+function importSyncCode() {
+  const code = document.getElementById('syncImportCode').value.trim();
+  const fb = document.getElementById('syncFeedback');
+  if (!code) { fb.textContent = 'נא להדביק קוד'; fb.style.color = '#c0392b'; fb.style.display = 'block'; return; }
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(code))));
+    Object.keys(data).forEach(key => localStorage.setItem(key, JSON.stringify(data[key])));
+    updateProfileWeeklyPts();
+    fb.textContent = '✅ הנקודות עודכנו בהצלחה!';
+    fb.style.color = '#1a7a3a';
+    fb.style.display = 'block';
+    setTimeout(() => { document.getElementById('syncPopup').style.display = 'none'; }, 1500);
+  } catch(e) {
+    fb.textContent = 'קוד לא תקין — נסה שוב';
+    fb.style.color = '#c0392b';
+    fb.style.display = 'block';
+  }
 }
 
 // Allow Enter key to generate
