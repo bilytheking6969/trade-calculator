@@ -985,9 +985,13 @@ function resetAll() {
   correct    = 0;
   document.getElementById('questionsContainer').innerHTML = '';
   document.getElementById('scoreBar').style.display = 'none';
+  document.getElementById('submitSection').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitFeedback').style.display = 'none';
   document.getElementById('outputCard').className = 'card output';
   document.getElementById('topic').value = '';
   document.getElementById('inputCard').scrollIntoView({ behavior: 'smooth' });
+  stopTTS();
 }
 
 function escHtml(s) {
