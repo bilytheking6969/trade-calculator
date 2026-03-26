@@ -463,7 +463,10 @@
             <input type="password" id="ghTokenInput" placeholder="ghp_..." style="flex:1; font-family:monospace; font-size:0.8rem; margin-bottom:0;" />
             <button onclick="saveGHToken()" style="padding:10px 14px; background:#4c2f8a; color:white; border:none; border-radius:10px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">שמור</button>
           </div>
-          <div id="tokenStatus" style="font-size:0.82rem; font-weight:600;"></div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div id="tokenStatus" style="font-size:0.82rem; font-weight:600; flex:1;"></div>
+            <button onclick="manualCloudLoad()" style="padding:6px 12px; background:#e8f5e9; color:#1a7a3a; border:1.5px solid #a5d6a7; border-radius:8px; cursor:pointer; font-size:0.8rem; font-weight:700; white-space:nowrap;">⬇️ טען עכשיו</button>
+          </div>
           <div style="font-size:0.75rem; color:#aaa; margin-top:6px; line-height:1.5;">
             צור Token ב: github.com → Settings → Developer settings<br>→ Personal access tokens → New token → סמן <b>public_repo</b>
           </div>
@@ -1023,12 +1026,24 @@ const GH_FILE = 'points.json';
 
 function getGHToken() { return localStorage.getItem('gh_pat') || ''; }
 
-function saveGHToken() {
+async function saveGHToken() {
   const tok = document.getElementById('ghTokenInput').value.trim();
   if (!tok) return;
   localStorage.setItem('gh_pat', tok);
-  updateTokenStatus();
   document.getElementById('ghTokenInput').value = '';
+  const el = document.getElementById('tokenStatus');
+  el.textContent = '⏳ בודק...';
+  el.style.color = '#888';
+  await loadCloudPoints();
+  updateTokenStatus();
+}
+
+async function manualCloudLoad() {
+  const el = document.getElementById('tokenStatus');
+  el.textContent = '⏳ טוען...';
+  el.style.color = '#888';
+  await loadCloudPoints();
+  updateTokenStatus();
 }
 
 function updateTokenStatus() {
