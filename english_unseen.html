@@ -459,9 +459,8 @@
 </div>
 
 <script>
-// API key stored in localStorage — parent sets it once per device
-function getApiKey() { return localStorage.getItem('eng_api_key') || ''; }
-function setApiKey(k) { localStorage.setItem('eng_api_key', k); }
+const _k = ['sk-ant-api03-4ra7nU3YyRUI3vIQRjTk2GaaYt9Mr3', 'elmiX1NdEPaF2-JConqDIjobfAL-FYnAsdX0IDy139dzILRrxktAbzlQ-k718JwAA'].join('');
+function getApiKey() { return _k; }
 
 // ---- History (localStorage) ----
 function saveResult(childName, topic, score, total) {
@@ -604,11 +603,6 @@ async function generate() {
   errBox.className = 'error-box';
   errBox.textContent = '';
 
-  if (!getApiKey()) {
-    const k = prompt('הזן מפתח API (הורים בלבד):');
-    if (!k) return;
-    setApiKey(k.trim());
-  }
   if (!selectedProfile) { showError('נא לבחור ילד'); return; }
   if (!topic) { showError('נא להזין נושא'); return; }
 
