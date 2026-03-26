@@ -443,7 +443,8 @@
           <tr style="background:#faf7ff;"><td style="padding:7px;">מאתגרת</td><td>25</td><td>125</td></tr>
           <tr><td style="padding:7px;">קשה</td><td>30</td><td>150</td></tr>
         </table>
-        <p style="font-size:0.8rem; color:#aaa; margin-top:12px;">הנקודות השבועיות מתאפסות כל רביעי בחצות</p>
+        <p style="font-size:0.82rem; color:#c0392b; margin-top:12px; font-weight:600;">❌ תשובה שגויה = −2 נקודות</p>
+        <p style="font-size:0.8rem; color:#aaa; margin-top:6px;">הנקודות השבועיות מתאפסות כל רביעי בחצות</p>
         <button onclick="document.getElementById('pointsPopup').style.display='none'" style="margin-top:16px; padding:10px 28px; background:#764ba2; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700;">סגור</button>
       </div>
     </div>
@@ -893,6 +894,7 @@ function renderOutput(data) {
 
 let answered = {};
 let correct  = 0;
+let wrong    = 0;
 
 function clearFeedback(i) {
   if (answered[i]) return; // already submitted
@@ -925,8 +927,9 @@ function checkAnswer(i) {
     fb.style.color = '#1a7a3a';
     correct++;
   } else {
-    fb.textContent = `❌ לא נכון. התשובה הנכונה היא ${correctLetter}`;
+    fb.textContent = `❌ לא נכון. התשובה הנכונה היא ${correctLetter} (−2 נקודות)`;
     fb.style.color = '#c0392b';
+    wrong++;
   }
 
   block.querySelector('.check-btn').disabled = true;
@@ -935,16 +938,19 @@ function checkAnswer(i) {
   // Show score when all answered
   const total = parsedData.questions.length;
   if (Object.keys(answered).length === total) {
-    const ppq   = getPointsPerQ();
-    const pts   = correct * ppq;
+    const ppq      = getPointsPerQ();
+    const penalty  = wrong * 2;
+    const pts      = Math.max(0, correct * ppq - penalty);
     const diffLabelsArr = ['קלה מאוד','קלה','רגילה','מאתגרת','קשה'];
     document.getElementById('scoreVal').textContent = correct;
     document.getElementById('scoreTot').textContent = ' / ' + total;
     document.getElementById('pointsEarned').textContent = pts;
     document.getElementById('pointsBreakdown').innerHTML =
       `רמת קושי: <b>${diffLabelsArr[diffOffset]}</b><br>` +
-      `נקודות לשאלה נכונה: <b>${ppq}</b><br>` +
-      `תשובות נכונות: <b>${correct}/${total}</b><br>` +
+      `נקודות לשאלה נכונה: <b>+${ppq}</b><br>` +
+      `ניכוי לשאלה שגויה: <b>−2</b><br>` +
+      `תשובות נכונות: <b>${correct}/${total}</b>` +
+      (wrong > 0 ? ` | שגויות: <b style="color:#c0392b">${wrong}</b> (−${penalty} נק׳)` : '') + `<br>` +
       `סה"כ תרגיל זה: <b>${pts} נקודות</b>`;
     document.getElementById('scoreBar').style.display = 'block';
     document.getElementById('submitSection').style.display = 'block';
@@ -957,7 +963,7 @@ async function submitExercise() {
   const topic     = document.getElementById('topic').value.trim();
   const total     = parsedData.questions.length;
   const ppq       = getPointsPerQ();
-  const pts       = correct * ppq;
+  const pts       = Math.max(0, correct * ppq - wrong * 2);
   const weekly    = addWeeklyPoints(childName, pts);
   document.getElementById('weeklyPoints').textContent = weekly;
   saveResult(childName, topic, correct, total);
@@ -983,6 +989,7 @@ function resetAll() {
   parsedData = null;
   answered   = {};
   correct    = 0;
+  wrong      = 0;
   document.getElementById('questionsContainer').innerHTML = '';
   document.getElementById('scoreBar').style.display = 'none';
   document.getElementById('submitSection').style.display = 'none';
