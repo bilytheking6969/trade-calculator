@@ -1197,9 +1197,8 @@ async function submitExercise() {
   saveResult(childName, topic, correct, total);
   updateProfileWeeklyPts();
   await sendEmail(childName, correct, total, topic, pts, weekly);
-  saveCloudPoints(); // async, fire-and-forget
-  document.getElementById('submitBtn').disabled = true;
-  document.getElementById('submitFeedback').style.display = 'block';
+  await saveCloudPoints();
+  setTimeout(() => location.reload(), 1500);
 }
 
 function setLoading(on) {
@@ -1272,6 +1271,11 @@ async function loadCloudPoints() {
       if (data.english_history.length >= local.length)
         localStorage.setItem('english_history', JSON.stringify(data.english_history));
     }
+    if (data.site_locked) {
+      localStorage.setItem('site_locked', '1');
+      document.getElementById('lockScreen').style.display = 'flex';
+      document.getElementById('lockPinInput').focus();
+    }
     // merge rate limit timestamps (union of cloud + local, filter to last hour)
     const now = Date.now();
     ['alon','eitan','itai'].forEach(id => {
@@ -1298,6 +1302,12 @@ async function saveCloudPoints() {
 
 function lockSite() {
   localStorage.setItem('site_locked', '1');
+  // save lock to cloud
+  fetch(POINTS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...collectLocalData(), site_locked: true }),
+  }).catch(() => {});
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('lockPinInput').value = '';
   document.getElementById('lockPinError').style.display = 'none';
@@ -1311,6 +1321,12 @@ function unlockSite() {
     return;
   }
   localStorage.removeItem('site_locked');
+  // save unlock to cloud
+  fetch(POINTS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...collectLocalData(), site_locked: false }),
+  }).catch(() => {});
   document.getElementById('lockScreen').style.display = 'none';
 }
 
