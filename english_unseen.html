@@ -1165,7 +1165,12 @@ function checkAnswer(i) {
       (translated > 0 ? ` | תרגומים: <b style="color:#c0392b">${translated}</b> (−${trPenalty} נק׳)` : '') + `<br>` +
       `סה"כ תרגיל זה: <b>${pts} נקודות</b>`;
     document.getElementById('scoreBar').style.display = 'block';
-    document.getElementById('submitSection').style.display = 'block';
+    if (wrong > 3) {
+      document.getElementById('submitSection').style.display = 'none';
+      document.getElementById('pointsBreakdown').innerHTML += `<br><span style="color:#c0392b;font-weight:700;">❌ יותר מ-3 שגיאות — לא ניתן להגיש</span>`;
+    } else {
+      document.getElementById('submitSection').style.display = 'block';
+    }
     document.getElementById('scoreBar').scrollIntoView({ behavior: 'smooth' });
   }
 }
