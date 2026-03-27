@@ -1203,6 +1203,9 @@ function checkAnswer(i) {
 }
 
 async function submitExercise() {
+  const btn = document.getElementById('submitBtn');
+  if (btn.disabled) return;
+  btn.disabled = true;
   const childName = profiles[selectedProfile]?.name || selectedProfile;
   const topic     = document.getElementById('topic').value.trim();
   const total     = parsedData.questions.length;
