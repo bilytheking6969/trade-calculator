@@ -1017,7 +1017,7 @@ Text type: ${typeDesc}
 
 Instructions:
 1. Write an English reading passage about the topic. STRICTLY follow these instructions: ${g.level}.${paraInstruction} Make it engaging and age-appropriate.
-2. Write exactly ${numQ} multiple-choice comprehension questions at the SAME language level as the passage. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
+2. Write exactly ${numQ} multiple-choice comprehension questions at the SAME language level as the passage. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly. CRITICAL: all 4 options must be similar in length — never make the correct answer longer or more detailed than the wrong ones. A student should not be able to guess the answer by length alone.
 
 Output ONLY valid JSON in this exact format (no markdown, no extra text):
 {
