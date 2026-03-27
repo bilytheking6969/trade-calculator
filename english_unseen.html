@@ -468,14 +468,6 @@
       </div>
     </div>
 
-    <!-- Lock screen -->
-    <div id="lockScreen" style="display:none; position:fixed; inset:0; background:rgba(30,20,60,0.97); z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
-      <div style="font-size:3rem;">🔒</div>
-      <div style="color:white; font-size:1.3rem; font-weight:700;">האתר נעול</div>
-      <input id="lockPinInput" type="password" placeholder="הכנס קוד לפתיחה" style="padding:12px 16px; border-radius:10px; border:none; font-size:1rem; text-align:center; width:220px;" onkeydown="if(event.key==='Enter') unlockSite()" />
-      <div id="lockPinError" style="color:#ff8080; font-size:0.9rem; display:none;">קוד שגוי</div>
-      <button onclick="unlockSite()" style="padding:12px 32px; background:#764ba2; color:white; border:none; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer;">פתח</button>
-    </div>
 
     <!-- Sync popup -->
     <div id="syncPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:12px;">
@@ -1295,11 +1287,7 @@ async function loadCloudPoints() {
       if (data.english_history.length >= local.length)
         localStorage.setItem('english_history', JSON.stringify(data.english_history));
     }
-    if (data.site_locked) {
-      localStorage.setItem('site_locked', '1');
-      document.getElementById('lockScreen').style.display = 'flex';
-      document.getElementById('lockPinInput').focus();
-    }
+
     // merge rate limit timestamps (union of cloud + local, filter to last hour)
     const now = Date.now();
     ['alon','eitan','itai'].forEach(id => {
@@ -1324,19 +1312,6 @@ async function saveCloudPoints() {
   } catch(e) {}
 }
 
-function lockSite() {
-  localStorage.setItem('site_locked', '1');
-  // save lock to cloud
-  fetch(POINTS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...collectLocalData(), site_locked: true }),
-  }).catch(() => {});
-  document.getElementById('lockScreen').style.display = 'flex';
-  document.getElementById('lockPinInput').value = '';
-  document.getElementById('lockPinError').style.display = 'none';
-  document.getElementById('lockPinInput').focus();
-}
 
 function overrideLimit() {
   const entered = document.getElementById('overridePinInput')?.value.trim();
@@ -1354,21 +1329,6 @@ function overrideLimit() {
   generate();
 }
 
-function unlockSite() {
-  const entered = document.getElementById('lockPinInput').value.trim();
-  if (entered !== String(2 * 140192)) {
-    document.getElementById('lockPinError').style.display = 'block';
-    return;
-  }
-  localStorage.removeItem('site_locked');
-  // save unlock to cloud
-  fetch(POINTS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...collectLocalData(), site_locked: false }),
-  }).catch(() => {});
-  document.getElementById('lockScreen').style.display = 'none';
-}
 
 function showSyncPopup() {
   document.getElementById('resetSection').style.display = 'block';
@@ -1418,7 +1378,6 @@ document.getElementById('topic').addEventListener('keydown', e => { if (e.key ==
 updateProfileWeeklyPts();
 renderDiff();
 loadCloudPoints();
-if (localStorage.getItem('site_locked')) lockSite();
 </script>
 </body>
 </html>
