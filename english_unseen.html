@@ -1014,8 +1014,9 @@ function buildPrompt(topic, g, type) {
   const typeDesc = type === 'science'
     ? 'a non-fiction scientific/informational text with facts and explanations'
     : 'a narrative fictional story with characters and events';
-  const noCatsDogsNote = '';
   const numQ = selectedProfile === 'itai' ? 3 : 5;
+  const numParas = selectedProfile !== 'itai' ? [3,3,4,4,5][diffOffset] : null;
+  const paraInstruction = numParas ? ` Organize the passage into exactly ${numParas} paragraphs.` : '';
   return `You are an English teacher creating a reading comprehension exercise for Israeli students who are learning English as a foreign language.
 
 Student level: ${g.label} — English proficiency: ${g.level}
@@ -1023,7 +1024,7 @@ Topic: "${topic}"
 Text type: ${typeDesc}
 
 Instructions:
-1. Write an English reading passage about the topic. STRICTLY follow these instructions: ${g.level}. Make it engaging and age-appropriate.
+1. Write an English reading passage about the topic. STRICTLY follow these instructions: ${g.level}.${paraInstruction} Make it engaging and age-appropriate.
 2. Write exactly ${numQ} multiple-choice comprehension questions at the SAME language level as the passage. Each question must have 4 options (A, B, C, D). Mark the correct answer clearly.
 
 Output ONLY valid JSON in this exact format (no markdown, no extra text):
